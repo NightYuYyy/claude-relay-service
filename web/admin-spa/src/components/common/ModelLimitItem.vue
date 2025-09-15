@@ -60,10 +60,30 @@ const localTotalLimit = ref(props.totalLimit)
 const localDailyLimit = ref(props.dailyLimit)
 
 // Watch props
-watch(() => props.totalLimit, (val) => { localTotalLimit.value = val })
-watch(() => props.dailyLimit, (val) => { localDailyLimit.value = val })
+watch(
+  () => props.totalLimit,
+  (val) => {
+    localTotalLimit.value = val
+  }
+)
+watch(
+  () => props.dailyLimit,
+  (val) => {
+    localDailyLimit.value = val
+  }
+)
 
 // Emit updates
-watch(localTotalLimit, (val) => { emit('update:totalLimit', val || 0) })
-watch(localDailyLimit, (val) => { emit('update:dailyLimit', val || 0) })
+watch(localTotalLimit, (val) => {
+  const numVal = val || 0
+  if (numVal !== props.totalLimit) {
+    emit('update:totalLimit', numVal)
+  }
+})
+watch(localDailyLimit, (val) => {
+  const numVal = val || 0
+  if (numVal !== props.dailyLimit) {
+    emit('update:dailyLimit', numVal)
+  }
+})
 </script>

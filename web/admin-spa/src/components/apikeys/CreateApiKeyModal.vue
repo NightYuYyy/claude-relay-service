@@ -337,8 +337,8 @@
 
           <!-- 渠道费用限制设置 -->
           <PlatformModelLimits
-            v-model:platform-limits="form.platformLimits"
             v-model:model-limits="form.modelLimits"
+            v-model:platform-limits="form.platformLimits"
           />
 
           <div>
@@ -1152,9 +1152,6 @@ const removeTag = (index) => {
 }
 
 // 模型限制管理
-
-
-
 
 // 创建 API Key
 const createApiKey = async () => {

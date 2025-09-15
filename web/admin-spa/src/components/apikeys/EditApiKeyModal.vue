@@ -882,7 +882,6 @@ import { useClientsStore } from '@/stores/clients'
 import { useApiKeysStore } from '@/stores/apiKeys'
 import { apiClient } from '@/config/api'
 import AccountSelector from '@/components/common/AccountSelector.vue'
-import PlatformModelLimits from '@/components/common/PlatformModelLimits.vue'
 
 const props = defineProps({
   apiKey: {
@@ -990,7 +989,6 @@ const quickAddRestrictedModel = (model) => {
 }
 
 // 新增：模型限制管理方法
-
 
 const removeModelLimit = (model) => {
   delete form.modelLimits[model]

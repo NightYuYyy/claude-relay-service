@@ -1,12 +1,12 @@
 <template>
-  <div class="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-700 dark:bg-purple-900/20">
+  <div
+    class="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-700 dark:bg-purple-900/20"
+  >
     <div class="mb-3 flex items-center gap-2">
       <div class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-purple-500">
         <i class="fas fa-layer-group text-xs text-white" />
       </div>
-      <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-        渠道费用限制 (可选)
-      </h4>
+      <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">渠道费用限制 (可选)</h4>
     </div>
 
     <div class="space-y-3">
@@ -16,25 +16,25 @@
         <div class="space-y-2">
           <!-- Claude 平台 -->
           <PlatformLimitItem
+            v-model:daily-limit="localPlatformLimits.claude.dailyLimit"
             v-model:enabled="localPlatformLimits.claude.enabled"
             v-model:total-limit="localPlatformLimits.claude.totalLimit"
-            v-model:daily-limit="localPlatformLimits.claude.dailyLimit"
             platform="Claude"
           />
 
           <!-- OpenAI 平台 -->
           <PlatformLimitItem
+            v-model:daily-limit="localPlatformLimits.openai.dailyLimit"
             v-model:enabled="localPlatformLimits.openai.enabled"
             v-model:total-limit="localPlatformLimits.openai.totalLimit"
-            v-model:daily-limit="localPlatformLimits.openai.dailyLimit"
             platform="OpenAI"
           />
 
           <!-- Gemini 平台 -->
           <PlatformLimitItem
+            v-model:daily-limit="localPlatformLimits.gemini.dailyLimit"
             v-model:enabled="localPlatformLimits.gemini.enabled"
             v-model:total-limit="localPlatformLimits.gemini.totalLimit"
-            v-model:daily-limit="localPlatformLimits.gemini.dailyLimit"
             platform="Gemini"
           />
         </div>
@@ -48,8 +48,8 @@
           <ModelLimitItem
             v-for="(config, model) in localModelLimits"
             :key="model"
-            v-model:total-limit="config.totalLimit"
             v-model:daily-limit="config.dailyLimit"
+            v-model:total-limit="config.totalLimit"
             :model="model"
             @remove="removeModelLimit(model)"
           />
@@ -83,8 +83,8 @@
             </select>
             <button
               class="rounded bg-purple-500 px-3 py-1 text-sm font-medium text-white hover:bg-purple-600 disabled:opacity-50 dark:bg-purple-600 dark:hover:bg-purple-700"
-              type="button"
               :disabled="!newModelName || localModelLimits[newModelName]"
+              type="button"
               @click="addModelLimit"
             >
               添加
@@ -121,27 +121,62 @@ const props = defineProps({
 const emit = defineEmits(['update:platformLimits', 'update:modelLimits'])
 
 // Local state
-const localPlatformLimits = ref({ ...props.platformLimits })
-const localModelLimits = ref({ ...props.modelLimits })
+const localPlatformLimits = ref({
+  claude: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+  openai: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+  gemini: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+  ...JSON.parse(JSON.stringify(props.platformLimits || {}))
+})
+const localModelLimits = ref(JSON.parse(JSON.stringify(props.modelLimits || {})))
 const newModelName = ref('')
 
 // Watch for prop changes
-watch(() => props.platformLimits, (newVal) => {
-  localPlatformLimits.value = { ...newVal }
-}, { deep: true })
+watch(
+  () => props.platformLimits,
+  (newVal) => {
+    if (!newVal) return
+    // 深拷贝避免引用问题
+    localPlatformLimits.value = {
+      claude: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+      openai: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+      gemini: { enabled: false, totalLimit: 0, dailyLimit: 0 },
+      ...JSON.parse(JSON.stringify(newVal))
+    }
+  },
+  { deep: true }
+)
 
-watch(() => props.modelLimits, (newVal) => {
-  localModelLimits.value = { ...newVal }
-}, { deep: true })
+watch(
+  () => props.modelLimits,
+  (newVal) => {
+    if (!newVal) return
+    localModelLimits.value = JSON.parse(JSON.stringify(newVal))
+  },
+  { deep: true }
+)
 
 // Watch for local changes and emit
-watch(localPlatformLimits, (newVal) => {
-  emit('update:platformLimits', newVal)
-}, { deep: true })
+watch(
+  localPlatformLimits,
+  (newVal) => {
+    // 避免循环触发
+    if (JSON.stringify(newVal) !== JSON.stringify(props.platformLimits)) {
+      emit('update:platformLimits', JSON.parse(JSON.stringify(newVal)))
+    }
+  },
+  { deep: true }
+)
 
-watch(localModelLimits, (newVal) => {
-  emit('update:modelLimits', newVal)
-}, { deep: true })
+watch(
+  localModelLimits,
+  (newVal) => {
+    // 避免循环触发
+    if (JSON.stringify(newVal) !== JSON.stringify(props.modelLimits)) {
+      emit('update:modelLimits', JSON.parse(JSON.stringify(newVal)))
+    }
+  },
+  { deep: true }
+)
 
 // Methods
 const addModelLimit = () => {

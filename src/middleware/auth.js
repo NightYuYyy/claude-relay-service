@@ -1162,8 +1162,8 @@ const requestSizeLimit = (req, res, next) => {
 }
 
 // 🔧 通用费用限额检查函数
-async function checkCostLimit(type, config, keyId, keyName, identifier, redis) {
-  if (!config || !config.enabled) {
+async function checkCostLimit(type, costConfig, keyId, keyName, identifier, redisClient) {
+  if (!costConfig || !costConfig.enabled) {
     return null
   }
 
@@ -1198,16 +1198,16 @@ async function checkCostLimit(type, config, keyId, keyName, identifier, redis) {
   }
 
   // 检查总体限制
-  const totalError = await checkLimit('total', config.totalLimit, () =>
-    redis[`get${type}TotalCost`](keyId, identifier)
+  const totalError = await checkLimit('total', costConfig.totalLimit, () =>
+    redisClient[`get${type}TotalCost`](keyId, identifier)
   )
   if (totalError) {
     return totalError
   }
 
   // 检查每日限制
-  const dailyError = await checkLimit('daily', config.dailyLimit, () =>
-    redis[`get${type}DailyCost`](keyId, identifier)
+  const dailyError = await checkLimit('daily', costConfig.dailyLimit, () =>
+    redisClient[`get${type}DailyCost`](keyId, identifier)
   )
   if (dailyError) {
     return dailyError
