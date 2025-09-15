@@ -32,6 +32,7 @@
     "lint:check": "eslint src/**/*.js cli/**/*.js scripts/**/*.js",
     "format": "prettier --write \"src/**/*.js\" \"cli/**/*.js\" \"scripts/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.js\" \"cli/**/*.js\" \"scripts/**/*.js\"",
+    "format:web": "cd web/admin-spa && prettier --write src/",
     "docker:build": "docker build -t claude-relay-service .",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -45,7 +46,14 @@
     "data:export:encrypted": "node scripts/data-transfer-enhanced.js export --decrypt=false",
     "data:import:enhanced": "node scripts/data-transfer-enhanced.js import",
     "data:debug": "node scripts/debug-redis-keys.js",
-    "test:pricing-fallback": "node scripts/test-pricing-fallback.js"
+    "test:pricing-fallback": "node scripts/test-pricing-fallback.js",
+    "clear:cache": "node scripts/clear-cache-data.js",
+    "clear:cache:quick": "node scripts/quick-clear-cache.js",
+    "clear:cache:force": "node scripts/quick-clear-cache.js",
+    "clear:restart": "node scripts/clear-and-restart.js",
+    "clear:restart:force": "node scripts/clear-and-restart.js --force",
+    "fix:redis:wrongtype": "node scripts/fix-redis-wrongtype.js",
+    "fix:model:keys": "node scripts/clean-model-keys.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.861.0",

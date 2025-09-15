@@ -273,6 +273,228 @@
             </div>
           </div>
 
+          <!-- 渠道费用限制设置 -->
+          <div
+            class="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-700 dark:bg-purple-900/20"
+          >
+            <div class="mb-3 flex items-center gap-2">
+              <div
+                class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-purple-500"
+              >
+                <i class="fas fa-layer-group text-xs text-white" />
+              </div>
+              <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                渠道费用限制 (可选)
+              </h4>
+            </div>
+
+            <div class="space-y-3">
+              <!-- 平台级限制 -->
+              <div>
+                <h5 class="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                  按平台限制
+                </h5>
+                <div class="space-y-2">
+                  <!-- Claude 平台 -->
+                  <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                    <label class="mb-2 flex cursor-pointer items-center">
+                      <input
+                        v-model="form.platformLimits.claude.enabled"
+                        class="mr-2 text-purple-600 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700"
+                        type="checkbox"
+                      />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >Claude</span
+                      >
+                    </label>
+                    <div
+                      class="grid grid-cols-2 gap-2"
+                      :class="{ 'opacity-50': !form.platformLimits.claude.enabled }"
+                    >
+                      <div>
+                        <input
+                          v-model="form.platformLimits.claude.totalLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.claude.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">总体限额 ($)</span>
+                      </div>
+                      <div>
+                        <input
+                          v-model="form.platformLimits.claude.dailyLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.claude.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">每日限额 ($)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- OpenAI 平台 -->
+                  <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                    <label class="mb-2 flex cursor-pointer items-center">
+                      <input
+                        v-model="form.platformLimits.openai.enabled"
+                        class="mr-2 text-purple-600 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700"
+                        type="checkbox"
+                      />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >OpenAI (包含 Codex)</span
+                      >
+                    </label>
+                    <div
+                      class="grid grid-cols-2 gap-2"
+                      :class="{ 'opacity-50': !form.platformLimits.openai.enabled }"
+                    >
+                      <div>
+                        <input
+                          v-model="form.platformLimits.openai.totalLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.openai.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">总体限额 ($)</span>
+                      </div>
+                      <div>
+                        <input
+                          v-model="form.platformLimits.openai.dailyLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.openai.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">每日限额 ($)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gemini 平台 -->
+                  <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                    <label class="mb-2 flex cursor-pointer items-center">
+                      <input
+                        v-model="form.platformLimits.gemini.enabled"
+                        class="mr-2 text-purple-600 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700"
+                        type="checkbox"
+                      />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >Gemini</span
+                      >
+                    </label>
+                    <div
+                      class="grid grid-cols-2 gap-2"
+                      :class="{ 'opacity-50': !form.platformLimits.gemini.enabled }"
+                    >
+                      <div>
+                        <input
+                          v-model="form.platformLimits.gemini.totalLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.gemini.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">总体限额 ($)</span>
+                      </div>
+                      <div>
+                        <input
+                          v-model="form.platformLimits.gemini.dailyLimit"
+                          class="form-input w-full border-gray-300 text-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          :disabled="!form.platformLimits.gemini.enabled"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">每日限额 ($)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 模型级限制 -->
+              <div>
+                <h5 class="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                  按模型限制
+                </h5>
+                <div class="space-y-2">
+                  <!-- 已添加的模型限制 -->
+                  <div
+                    v-for="(config, model) in form.modelLimits"
+                    :key="model"
+                    class="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                  >
+                    <div class="mb-2 flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{
+                        model
+                      }}</span>
+                      <button
+                        class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        type="button"
+                        @click="removeModelLimit(model)"
+                      >
+                        <i class="fas fa-times text-xs" />
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <input
+                          v-model="config.totalLimit"
+                          class="form-input w-full border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">总体限额 ($)</span>
+                      </div>
+                      <div>
+                        <input
+                          v-model="config.dailyLimit"
+                          class="form-input w-full border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                          placeholder="0"
+                          step="0.01"
+                          type="number"
+                        />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">每日限额 ($)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 添加新模型限制 -->
+                  <div class="flex gap-2">
+                    <input
+                      v-model="newModelName"
+                      class="form-input flex-1 border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                      placeholder="输入模型名称，如 gpt-4、claude-opus、codex"
+                      type="text"
+                    />
+                    <button
+                      class="rounded-lg bg-purple-500 px-3 py-2 text-white transition-colors hover:bg-purple-600 disabled:opacity-50"
+                      :disabled="!newModelName.trim()"
+                      type="button"
+                      @click="addModelLimit"
+                    >
+                      <i class="fas fa-plus text-xs" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              <i class="fas fa-info-circle mr-1" />
+              渠道限制优先级：整体限额 > 平台限额 > 模型限额。启用后按层级依次检查。
+            </p>
+          </div>
+
           <div>
             <label class="mb-3 block text-sm font-semibold text-gray-700 dark:text-gray-300"
               >Opus 模型周费用限制 (美元)</label
@@ -660,6 +882,7 @@ import { useClientsStore } from '@/stores/clients'
 import { useApiKeysStore } from '@/stores/apiKeys'
 import { apiClient } from '@/config/api'
 import AccountSelector from '@/components/common/AccountSelector.vue'
+import PlatformModelLimits from '@/components/common/PlatformModelLimits.vue'
 
 const props = defineProps({
   apiKey: {
@@ -726,8 +949,17 @@ const form = reactive({
   allowedClients: [],
   tags: [],
   isActive: true,
-  ownerId: '' // 新增：所有者ID
+  ownerId: '', // 新增：所有者ID
+  // 新增：渠道限额配置
+  platformLimits: {
+    claude: { enabled: false, totalLimit: '', dailyLimit: '' },
+    openai: { enabled: false, totalLimit: '', dailyLimit: '' },
+    gemini: { enabled: false, totalLimit: '', dailyLimit: '' }
+  },
+  modelLimits: {}
 })
+
+// 新增：管理模型限制的响应式变量
 
 // 添加限制的模型
 const addRestrictedModel = () => {
@@ -755,6 +987,13 @@ const quickAddRestrictedModel = (model) => {
   if (!form.restrictedModels.includes(model)) {
     form.restrictedModels.push(model)
   }
+}
+
+// 新增：模型限制管理方法
+
+
+const removeModelLimit = (model) => {
+  delete form.modelLimits[model]
 }
 
 // 标签管理方法
@@ -883,6 +1122,10 @@ const updateApiKey = async () => {
     // 客户端限制 - 始终提交这些字段
     data.enableClientRestriction = form.enableClientRestriction
     data.allowedClients = form.allowedClients
+
+    // 新增：渠道限额配置
+    data.platformLimits = form.platformLimits
+    data.modelLimits = form.modelLimits
 
     // 活跃状态
     data.isActive = form.isActive
@@ -1125,6 +1368,29 @@ onMounted(async () => {
 
   // 初始化所有者
   form.ownerId = props.apiKey.userId || 'admin'
+
+  // 新增：初始化渠道限额配置
+  const platformLimits = props.apiKey.platformLimits || {}
+  form.platformLimits = {
+    claude: {
+      enabled: Boolean(platformLimits.claude?.enabled),
+      totalLimit: platformLimits.claude?.totalLimit || '',
+      dailyLimit: platformLimits.claude?.dailyLimit || ''
+    },
+    openai: {
+      enabled: Boolean(platformLimits.openai?.enabled),
+      totalLimit: platformLimits.openai?.totalLimit || '',
+      dailyLimit: platformLimits.openai?.dailyLimit || ''
+    },
+    gemini: {
+      enabled: Boolean(platformLimits.gemini?.enabled),
+      totalLimit: platformLimits.gemini?.totalLimit || '',
+      dailyLimit: platformLimits.gemini?.dailyLimit || ''
+    }
+  }
+
+  // 初始化模型限制
+  form.modelLimits = Object.assign({}, props.apiKey.modelLimits || {})
 })
 </script>
 

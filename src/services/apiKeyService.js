@@ -37,7 +37,9 @@ class ApiKeyService {
       tags = [],
       activationDays = 0, // 新增：激活后有效天数（0表示不使用此功能）
       expirationMode = 'fixed', // 新增：过期模式 'fixed'(固定时间) 或 'activation'(首次使用后激活)
-      icon = '' // 新增：图标（base64编码）
+      icon = '', // 新增：图标（base64编码）
+      platformLimits = {}, // 新增：平台级限额配置
+      modelLimits = {} // 新增：模型级限额配置
     } = options
 
     // 生成简单的API Key (64字符十六进制)
@@ -80,7 +82,9 @@ class ApiKeyService {
       createdBy: options.createdBy || 'admin',
       userId: options.userId || '',
       userUsername: options.userUsername || '',
-      icon: icon || '' // 新增：图标（base64编码）
+      icon: icon || '', // 新增：图标（base64编码）
+      platformLimits: JSON.stringify(platformLimits || {}), // 新增：平台级限额配置
+      modelLimits: JSON.stringify(modelLimits || {}) // 新增：模型级限额配置
     }
 
     // 保存API Key数据并建立哈希映射
@@ -119,7 +123,9 @@ class ApiKeyService {
       activatedAt: keyData.activatedAt,
       createdAt: keyData.createdAt,
       expiresAt: keyData.expiresAt,
-      createdBy: keyData.createdBy
+      createdBy: keyData.createdBy,
+      platformLimits: JSON.parse(keyData.platformLimits || '{}'), // 新增：平台级限额配置
+      modelLimits: JSON.parse(keyData.modelLimits || '{}') // 新增：模型级限额配置
     }
   }
 
@@ -220,6 +226,22 @@ class ApiKeyService {
         tags = []
       }
 
+      // 解析平台限额配置
+      let platformLimits = {}
+      try {
+        platformLimits = keyData.platformLimits ? JSON.parse(keyData.platformLimits) : {}
+      } catch (e) {
+        platformLimits = {}
+      }
+
+      // 解析模型限额配置
+      let modelLimits = {}
+      try {
+        modelLimits = keyData.modelLimits ? JSON.parse(keyData.modelLimits) : {}
+      } catch (e) {
+        modelLimits = {}
+      }
+
       return {
         valid: true,
         keyData: {
@@ -249,6 +271,8 @@ class ApiKeyService {
           dailyCost: dailyCost || 0,
           weeklyOpusCost: (await redis.getWeeklyOpusCost(keyData.id)) || 0,
           tags,
+          platformLimits, // 新增：平台级限额配置
+          modelLimits, // 新增：模型级限额配置
           usage
         }
       }
@@ -335,6 +359,22 @@ class ApiKeyService {
         tags = []
       }
 
+      // 解析平台限额配置
+      let platformLimits = {}
+      try {
+        platformLimits = keyData.platformLimits ? JSON.parse(keyData.platformLimits) : {}
+      } catch (e) {
+        platformLimits = {}
+      }
+
+      // 解析模型限额配置
+      let modelLimits = {}
+      try {
+        modelLimits = keyData.modelLimits ? JSON.parse(keyData.modelLimits) : {}
+      } catch (e) {
+        modelLimits = {}
+      }
+
       return {
         valid: true,
         keyData: {
@@ -369,6 +409,8 @@ class ApiKeyService {
           dailyCost: dailyCost || 0,
           weeklyOpusCost: (await redis.getWeeklyOpusCost(keyData.id)) || 0,
           tags,
+          platformLimits, // 新增：平台级限额配置
+          modelLimits, // 新增：模型级限额配置
           usage
         }
       }
@@ -483,6 +525,16 @@ class ApiKeyService {
         } catch (e) {
           key.tags = []
         }
+        try {
+          key.platformLimits = key.platformLimits ? JSON.parse(key.platformLimits) : {}
+        } catch (e) {
+          key.platformLimits = {}
+        }
+        try {
+          key.modelLimits = key.modelLimits ? JSON.parse(key.modelLimits) : {}
+        } catch (e) {
+          key.modelLimits = {}
+        }
         // 不暴露已弃用字段
         if (Object.prototype.hasOwnProperty.call(key, 'ccrAccountId')) {
           delete key.ccrAccountId
@@ -536,7 +588,9 @@ class ApiKeyService {
         'tags',
         'userId', // 新增：用户ID（所有者变更）
         'userUsername', // 新增：用户名（所有者变更）
-        'createdBy' // 新增：创建者（所有者变更）
+        'createdBy', // 新增：创建者（所有者变更）
+        'platformLimits', // 新增：平台级限额配置
+        'modelLimits' // 新增：模型级限额配置
       ]
       const updatedData = { ...keyData }
 
@@ -545,6 +599,9 @@ class ApiKeyService {
           if (field === 'restrictedModels' || field === 'allowedClients' || field === 'tags') {
             // 特殊处理数组字段
             updatedData[field] = JSON.stringify(value || [])
+          } else if (field === 'platformLimits' || field === 'modelLimits') {
+            // 特殊处理对象字段
+            updatedData[field] = JSON.stringify(value || {})
           } else if (
             field === 'enableModelRestriction' ||
             field === 'enableClientRestriction' ||
@@ -878,6 +935,9 @@ class ApiKeyService {
     accountType = null
   ) {
     try {
+      // 导入渠道识别工具
+      const ChannelDetector = require('../utils/channelDetector')
+
       // 提取 token 数量
       const inputTokens = usageObject.input_tokens || 0
       const outputTokens = usageObject.output_tokens || 0
@@ -926,9 +986,24 @@ class ApiKeyService {
 
       // 记录费用统计
       if (costInfo.totalCost > 0) {
+        // 记录总体费用
         await redis.incrementDailyCost(keyId, costInfo.totalCost)
+
+        // 识别平台和记录平台级费用
+        const platform = ChannelDetector.detectPlatform(model)
+        if (platform !== 'unknown') {
+          await redis.incrementPlatformDailyCost(keyId, platform, costInfo.totalCost)
+          logger.database(
+            `💰 Recorded platform cost for ${keyId}:${platform}: $${costInfo.totalCost.toFixed(6)}, model: ${model}`
+          )
+        }
+
+        // 记录模型级费用
+        const normalizedModel = ChannelDetector.normalizeModelName(model)
+        await redis.incrementModelDailyCost(keyId, normalizedModel, costInfo.totalCost)
+
         logger.database(
-          `💰 Recorded cost for ${keyId}: $${costInfo.totalCost.toFixed(6)}, model: ${model}`
+          `💰 Recorded cost for ${keyId}: $${costInfo.totalCost.toFixed(6)}, model: ${model}, platform: ${platform}`
         )
 
         // 记录 Opus 周费用（如果适用）

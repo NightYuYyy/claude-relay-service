@@ -395,14 +395,20 @@ class OpenAIResponsesRelayService {
           const totalTokens = usageData.total_tokens || inputTokens + outputTokens
           const modelToRecord = actualModel || requestedModel || 'gpt-4'
 
-          await apiKeyService.recordUsage(
+          // 构建详细的 usage 对象
+          const usageObject = {
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cache_creation_input_tokens: cacheCreateTokens,
+            cache_read_input_tokens: cacheReadTokens
+          }
+
+          await apiKeyService.recordUsageWithDetails(
             apiKeyData.id,
-            inputTokens,
-            outputTokens,
-            cacheCreateTokens,
-            cacheReadTokens,
+            usageObject,
             modelToRecord,
-            account.id
+            account.id,
+            'openai' // OpenAI-Responses 属于 OpenAI 平台
           )
 
           logger.info(
@@ -511,14 +517,20 @@ class OpenAIResponsesRelayService {
 
         const totalTokens = usageData.total_tokens || inputTokens + outputTokens
 
-        await apiKeyService.recordUsage(
+        // 构建详细的 usage 对象
+        const usageObject = {
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          cache_creation_input_tokens: cacheCreateTokens,
+          cache_read_input_tokens: cacheReadTokens
+        }
+
+        await apiKeyService.recordUsageWithDetails(
           apiKeyData.id,
-          inputTokens,
-          outputTokens,
-          cacheCreateTokens,
-          cacheReadTokens,
+          usageObject,
           actualModel,
-          account.id
+          account.id,
+          'openai' // OpenAI-Responses 属于 OpenAI 平台
         )
 
         logger.info(

@@ -2,6 +2,7 @@ const apiKeyService = require('../services/apiKeyService')
 const userService = require('../services/userService')
 const logger = require('../utils/logger')
 const redis = require('../models/redis')
+const ChannelDetector = require('../utils/channelDetector')
 // const { RateLimiterRedis } = require('rate-limiter-flexible') // 暂时未使用
 const config = require('../../config/config')
 
@@ -333,15 +334,61 @@ const authenticateApiKey = async (req, res, next) => {
       )
     }
 
+    // 检查渠道（平台和模型）限制
+    const platformLimits = validation.keyData.platformLimits || {}
+    const modelLimits = validation.keyData.modelLimits || {}
+
+    // 从请求中获取模型信息
+    const model = req.body?.model || ''
+
+    if (model) {
+      const platform = ChannelDetector.detectPlatform(model)
+      const normalizedModel = ChannelDetector.normalizeModelName(model)
+
+      // 检查平台限制
+      if (platform !== 'unknown' && platformLimits[platform]) {
+        const platformError = await checkCostLimit(
+          'Platform',
+          platformLimits[platform],
+          validation.keyData.id,
+          validation.keyData.name,
+          platform,
+          redis
+        )
+        if (platformError) {
+          logger.security(
+            `💰 Platform limit exceeded for key: ${validation.keyData.id} (${validation.keyData.name}), platform: ${platform}`
+          )
+          return res.status(429).json(platformError)
+        }
+      }
+
+      // 检查模型限制
+      if (modelLimits[normalizedModel]) {
+        const modelError = await checkCostLimit(
+          'Model',
+          modelLimits[normalizedModel],
+          validation.keyData.id,
+          validation.keyData.name,
+          normalizedModel,
+          redis
+        )
+        if (modelError) {
+          logger.security(
+            `💰 Model limit exceeded for key: ${validation.keyData.id} (${validation.keyData.name}), model: ${normalizedModel}`
+          )
+          return res.status(429).json(modelError)
+        }
+      }
+    }
+
     // 检查 Opus 周费用限制（仅对 Opus 模型生效）
     const weeklyOpusCostLimit = validation.keyData.weeklyOpusCostLimit || 0
     if (weeklyOpusCostLimit > 0) {
-      // 从请求中获取模型信息
-      const requestBody = req.body || {}
-      const model = requestBody.model || ''
+      const opusModel = req.body?.model || ''
 
       // 判断是否为 Opus 模型
-      if (model && model.toLowerCase().includes('claude-opus')) {
+      if (opusModel && opusModel.toLowerCase().includes('claude-opus')) {
         const weeklyOpusCost = validation.keyData.weeklyOpusCost || 0
 
         if (weeklyOpusCost >= weeklyOpusCostLimit) {
@@ -394,6 +441,8 @@ const authenticateApiKey = async (req, res, next) => {
       allowedClients: validation.keyData.allowedClients,
       dailyCostLimit: validation.keyData.dailyCostLimit,
       dailyCost: validation.keyData.dailyCost,
+      platformLimits: validation.keyData.platformLimits, // 新增：平台级限额配置
+      modelLimits: validation.keyData.modelLimits, // 新增：模型级限额配置
       usage: validation.keyData.usage
     }
     req.usage = validation.keyData.usage
@@ -1110,6 +1159,61 @@ const requestSizeLimit = (req, res, next) => {
   }
 
   return next()
+}
+
+// 🔧 通用费用限额检查函数
+async function checkCostLimit(type, config, keyId, keyName, identifier, redis) {
+  if (!config || !config.enabled) {
+    return null
+  }
+
+  const checkLimit = async (limitType, limit, getCostFunc) => {
+    if (limit <= 0) {
+      return null
+    }
+
+    const cost = await getCostFunc()
+    if (cost >= limit) {
+      const resetAt =
+        limitType === 'daily' ? new Date(new Date().setHours(24, 0, 0, 0)).toISOString() : undefined
+
+      return {
+        error: `${type} ${limitType} limit exceeded`,
+        message: `已达到${identifier}${limitType === 'daily' ? '每日' : '总体'}费用限制 ($${limit})`,
+        details: {
+          [type.toLowerCase()]: identifier,
+          currentCost: cost,
+          limit,
+          limitType,
+          ...(resetAt && { resetAt })
+        }
+      }
+    }
+
+    // 记录使用情况
+    logger.api(
+      `💰 ${type} ${limitType} cost usage for key: ${keyId} (${keyName}), ${type.toLowerCase()}: ${identifier}, current: $${cost.toFixed(2)}/$${limit}`
+    )
+    return null
+  }
+
+  // 检查总体限制
+  const totalError = await checkLimit('total', config.totalLimit, () =>
+    redis[`get${type}TotalCost`](keyId, identifier)
+  )
+  if (totalError) {
+    return totalError
+  }
+
+  // 检查每日限制
+  const dailyError = await checkLimit('daily', config.dailyLimit, () =>
+    redis[`get${type}DailyCost`](keyId, identifier)
+  )
+  if (dailyError) {
+    return dailyError
+  }
+
+  return null
 }
 
 module.exports = {

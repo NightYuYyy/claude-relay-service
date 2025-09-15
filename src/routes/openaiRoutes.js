@@ -395,14 +395,20 @@ const handleResponses = async (req, res) => {
           const cacheCreateTokens = usageData.input_tokens_details?.cache_creation_tokens || 0
           const cacheReadTokens = usageData.input_tokens_details?.cached_tokens || 0
 
-          await apiKeyService.recordUsage(
+          // 构建详细的 usage 对象
+          const usageObject = {
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cache_creation_input_tokens: cacheCreateTokens,
+            cache_read_input_tokens: cacheReadTokens
+          }
+
+          await apiKeyService.recordUsageWithDetails(
             apiKeyData.id,
-            inputTokens,
-            outputTokens,
-            cacheCreateTokens,
-            cacheReadTokens,
+            usageObject,
             actualModel,
-            accountId
+            accountId,
+            'openai'
           )
 
           logger.info(
@@ -514,14 +520,20 @@ const handleResponses = async (req, res) => {
           // 使用响应中的真实 model，如果没有则使用请求中的 model，最后回退到默认值
           const modelToRecord = actualModel || requestedModel || 'gpt-4'
 
-          await apiKeyService.recordUsage(
+          // 构建详细的 usage 对象
+          const usageObject = {
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cache_creation_input_tokens: cacheCreateTokens,
+            cache_read_input_tokens: cacheReadTokens
+          }
+
+          await apiKeyService.recordUsageWithDetails(
             apiKeyData.id,
-            inputTokens,
-            outputTokens,
-            cacheCreateTokens,
-            cacheReadTokens,
+            usageObject,
             modelToRecord,
-            accountId
+            accountId,
+            'openai'
           )
 
           logger.info(

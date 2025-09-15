@@ -537,7 +537,9 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       tags,
       activationDays, // 新增：激活后有效天数
       expirationMode, // 新增：过期模式
-      icon // 新增：图标
+      icon, // 新增：图标
+      platformLimits, // 新增：平台级限额配置
+      modelLimits // 新增：模型级限额配置
     } = req.body
 
     // 输入验证
@@ -664,7 +666,9 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       tags,
       activationDays,
       expirationMode,
-      icon
+      icon,
+      platformLimits,
+      modelLimits
     })
 
     logger.success(`🔑 Admin created new API key: ${name}`)
@@ -703,7 +707,9 @@ router.post('/api-keys/batch', authenticateAdmin, async (req, res) => {
       tags,
       activationDays,
       expirationMode,
-      icon
+      icon,
+      platformLimits, // 新增：平台级限额配置
+      modelLimits // 新增：模型级限额配置
     } = req.body
 
     // 输入验证
@@ -752,7 +758,9 @@ router.post('/api-keys/batch', authenticateAdmin, async (req, res) => {
           tags,
           activationDays,
           expirationMode,
-          icon
+          icon,
+          platformLimits,
+          modelLimits
         })
 
         // 保留原始 API Key 供返回
@@ -995,7 +1003,9 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
       dailyCostLimit,
       weeklyOpusCostLimit,
       tags,
-      ownerId // 新增：所有者ID字段
+      ownerId, // 新增：所有者ID字段
+      platformLimits, // 新增：平台限额配置
+      modelLimits // 新增：模型限额配置
     } = req.body
 
     // 只允许更新指定字段
@@ -1167,6 +1177,111 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ error: 'All tags must be non-empty strings' })
       }
       updates.tags = tags
+    }
+
+    // 处理平台限额配置
+    if (platformLimits !== undefined) {
+      if (typeof platformLimits !== 'object' || platformLimits === null) {
+        return res.status(400).json({ error: 'Platform limits must be an object' })
+      }
+
+      // 验证平台限额格式
+      const validPlatforms = ['claude', 'openai', 'gemini']
+      for (const platform of validPlatforms) {
+        if (platformLimits[platform]) {
+          const platformConfig = platformLimits[platform]
+          if (typeof platformConfig !== 'object' || platformConfig === null) {
+            return res.status(400).json({ error: `Platform ${platform} config must be an object` })
+          }
+          // 更宽松的布尔值检查，支持字符串形式的布尔值
+          const { enabled } = platformConfig
+          if (
+            enabled !== true &&
+            enabled !== false &&
+            enabled !== 'true' &&
+            enabled !== 'false' &&
+            typeof enabled !== 'boolean'
+          ) {
+            return res.status(400).json({ error: `Platform ${platform} enabled must be boolean` })
+          }
+          if (
+            platformConfig.totalLimit !== '' &&
+            platformConfig.totalLimit !== null &&
+            platformConfig.totalLimit !== undefined
+          ) {
+            const totalLimit = Number(platformConfig.totalLimit)
+            if (isNaN(totalLimit) || totalLimit < 0) {
+              return res
+                .status(400)
+                .json({ error: `Platform ${platform} total limit must be non-negative` })
+            }
+          }
+          if (
+            platformConfig.dailyLimit !== '' &&
+            platformConfig.dailyLimit !== null &&
+            platformConfig.dailyLimit !== undefined
+          ) {
+            const dailyLimit = Number(platformConfig.dailyLimit)
+            if (isNaN(dailyLimit) || dailyLimit < 0) {
+              return res
+                .status(400)
+                .json({ error: `Platform ${platform} daily limit must be non-negative` })
+            }
+          }
+        }
+      }
+      updates.platformLimits = platformLimits
+    }
+
+    // 处理模型限额配置
+    if (modelLimits !== undefined) {
+      if (typeof modelLimits !== 'object' || modelLimits === null) {
+        return res.status(400).json({ error: 'Model limits must be an object' })
+      }
+
+      // 验证模型限额格式
+      for (const modelName in modelLimits) {
+        const modelConfig = modelLimits[modelName]
+        if (typeof modelConfig !== 'object' || modelConfig === null) {
+          return res.status(400).json({ error: `Model ${modelName} config must be an object` })
+        }
+        // 更宽松的布尔值检查，支持字符串形式的布尔值
+        const { enabled } = modelConfig
+        if (
+          enabled !== true &&
+          enabled !== false &&
+          enabled !== 'true' &&
+          enabled !== 'false' &&
+          typeof enabled !== 'boolean'
+        ) {
+          return res.status(400).json({ error: `Model ${modelName} enabled must be boolean` })
+        }
+        if (
+          modelConfig.totalLimit !== '' &&
+          modelConfig.totalLimit !== null &&
+          modelConfig.totalLimit !== undefined
+        ) {
+          const totalLimit = Number(modelConfig.totalLimit)
+          if (isNaN(totalLimit) || totalLimit < 0) {
+            return res
+              .status(400)
+              .json({ error: `Model ${modelName} total limit must be non-negative` })
+          }
+        }
+        if (
+          modelConfig.dailyLimit !== '' &&
+          modelConfig.dailyLimit !== null &&
+          modelConfig.dailyLimit !== undefined
+        ) {
+          const dailyLimit = Number(modelConfig.dailyLimit)
+          if (isNaN(dailyLimit) || dailyLimit < 0) {
+            return res
+              .status(400)
+              .json({ error: `Model ${modelName} daily limit must be non-negative` })
+          }
+        }
+      }
+      updates.modelLimits = modelLimits
     }
 
     // 处理活跃/禁用状态状态, 放在过期处理后，以确保后续增加禁用key功能

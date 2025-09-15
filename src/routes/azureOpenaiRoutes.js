@@ -79,14 +79,20 @@ class AtomicUsageReporter {
         usageData.input_tokens_details?.cached_tokens ||
         0
 
-      await apiKeyService.recordUsage(
+      // 构建详细的 usage 对象
+      const usageObject = {
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cache_creation_input_tokens: cacheCreateTokens,
+        cache_read_input_tokens: cacheReadTokens
+      }
+
+      await apiKeyService.recordUsageWithDetails(
         apiKeyId,
-        inputTokens,
-        outputTokens,
-        cacheCreateTokens,
-        cacheReadTokens,
+        usageObject,
         modelToRecord,
-        accountId
+        accountId,
+        'openai' // Azure OpenAI 属于 OpenAI 平台
       )
 
       // 同步更新 Azure 账户的 lastUsedAt 和累计使用量

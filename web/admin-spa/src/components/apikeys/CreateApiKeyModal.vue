@@ -335,6 +335,12 @@
             </div>
           </div>
 
+          <!-- 渠道费用限制设置 -->
+          <PlatformModelLimits
+            v-model:platform-limits="form.platformLimits"
+            v-model:model-limits="form.modelLimits"
+          />
+
           <div>
             <label class="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
               >Opus 模型周费用限制 (美元)</label
@@ -809,6 +815,7 @@ import { useClientsStore } from '@/stores/clients'
 import { useApiKeysStore } from '@/stores/apiKeys'
 import { apiClient } from '@/config/api'
 import AccountSelector from '@/components/common/AccountSelector.vue'
+import PlatformModelLimits from '@/components/common/PlatformModelLimits.vue'
 
 const props = defineProps({
   accounts: {
@@ -841,6 +848,8 @@ const errors = ref({
 // 标签相关
 const newTag = ref('')
 const availableTags = ref([])
+
+// 模型限制相关
 
 // 计算未选择的标签
 const unselectedTags = computed(() => {
@@ -877,7 +886,14 @@ const form = reactive({
   modelInput: '',
   enableClientRestriction: false,
   allowedClients: [],
-  tags: []
+  tags: [],
+  platformLimits: {
+    // 新增：平台级限额配置
+    claude: { enabled: false, totalLimit: '', dailyLimit: '' },
+    openai: { enabled: false, totalLimit: '', dailyLimit: '' },
+    gemini: { enabled: false, totalLimit: '', dailyLimit: '' }
+  },
+  modelLimits: {} // 新增：模型级限额配置
 })
 
 // 加载支持的客户端和已存在的标签
@@ -1135,6 +1151,11 @@ const removeTag = (index) => {
   form.tags.splice(index, 1)
 }
 
+// 模型限制管理
+
+
+
+
 // 创建 API Key
 const createApiKey = async () => {
   // 验证表单
@@ -1211,7 +1232,9 @@ const createApiKey = async () => {
       enableModelRestriction: form.enableModelRestriction,
       restrictedModels: form.restrictedModels,
       enableClientRestriction: form.enableClientRestriction,
-      allowedClients: form.allowedClients
+      allowedClients: form.allowedClients,
+      platformLimits: form.platformLimits,
+      modelLimits: form.modelLimits
     }
 
     // 处理Claude账户绑定（区分OAuth和Console）

@@ -798,6 +798,49 @@ router.get('/v1/key-info', authenticateApiKey, async (req, res) => {
   try {
     const usage = await apiKeyService.getUsageStats(req.apiKey.id)
 
+    // 获取平台和模型费用统计
+    const platformCosts = await redis.getAllPlatformCosts(req.apiKey.id)
+    const modelCosts = await redis.getAllModelCosts(req.apiKey.id)
+
+    // 构建限额状态信息
+    const limits = {
+      overall: {
+        dailyLimit: req.apiKey.dailyCostLimit || 0,
+        currentCost: req.apiKey.dailyCost || 0,
+        remaining: Math.max(0, (req.apiKey.dailyCostLimit || 0) - (req.apiKey.dailyCost || 0))
+      },
+      platforms: {},
+      models: {}
+    }
+
+    // 处理平台限额状态
+    const platformLimits = req.apiKey.platformLimits || {}
+    for (const [platform, config] of Object.entries(platformLimits)) {
+      if (config.enabled && config.dailyLimit > 0) {
+        const currentCost = platformCosts[platform] || 0
+        limits.platforms[platform] = {
+          enabled: true,
+          dailyLimit: config.dailyLimit,
+          currentCost,
+          remaining: Math.max(0, config.dailyLimit - currentCost)
+        }
+      }
+    }
+
+    // 处理模型限额状态
+    const modelLimits = req.apiKey.modelLimits || {}
+    for (const [model, config] of Object.entries(modelLimits)) {
+      if (config.enabled && config.dailyLimit > 0) {
+        const currentCost = modelCosts[model] || 0
+        limits.models[model] = {
+          enabled: true,
+          dailyLimit: config.dailyLimit,
+          currentCost,
+          remaining: Math.max(0, config.dailyLimit - currentCost)
+        }
+      }
+    }
+
     res.json({
       keyInfo: {
         id: req.apiKey.id,
@@ -805,6 +848,7 @@ router.get('/v1/key-info', authenticateApiKey, async (req, res) => {
         tokenLimit: req.apiKey.tokenLimit,
         usage
       },
+      limits,
       timestamp: new Date().toISOString()
     })
   } catch (error) {

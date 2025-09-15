@@ -712,7 +712,227 @@ class RedisClient {
     return result
   }
 
-  // 💰 增加本周 Opus 费用
+  // 💰 增加平台每日费用
+  async incrementPlatformDailyCost(keyId, platform, amount) {
+    const today = getDateStringInTimezone()
+    const tzDate = getDateInTimezone()
+    const currentMonth = `${tzDate.getUTCFullYear()}-${String(tzDate.getUTCMonth() + 1).padStart(2, '0')}`
+    const currentHour = `${today}:${String(getHourInTimezone(new Date())).padStart(2, '0')}`
+
+    const dailyKey = `usage:platform:daily:${keyId}:${platform}:${today}`
+    const monthlyKey = `usage:platform:monthly:${keyId}:${platform}:${currentMonth}`
+    const hourlyKey = `usage:platform:hourly:${keyId}:${platform}:${currentHour}`
+    const totalKey = `usage:platform:total:${keyId}:${platform}`
+
+    logger.debug(
+      `💰 Incrementing platform cost for ${keyId}:${platform}, amount: $${amount}, date: ${today}, dailyKey: ${dailyKey}`
+    )
+
+    // 使用 HINCRBYFLOAT 而不是 INCRBYFLOAT 来保持 HASH 类型一致性
+    const results = await Promise.all([
+      this.client.hincrbyfloat(dailyKey, 'cost', amount),
+      this.client.hincrbyfloat(monthlyKey, 'cost', amount),
+      this.client.hincrbyfloat(hourlyKey, 'cost', amount),
+      this.client.hincrbyfloat(totalKey, 'cost', amount),
+      // 设置过期时间
+      this.client.expire(dailyKey, 86400 * 30), // 30天
+      this.client.expire(monthlyKey, 86400 * 90), // 90天
+      this.client.expire(hourlyKey, 86400 * 7) // 7天
+    ])
+
+    logger.debug(`💰 Platform cost incremented successfully, new daily total: $${results[0]}`)
+    return parseFloat(results[0])
+  }
+
+  // 💰 获取平台每日费用
+  async getPlatformDailyCost(keyId, platform) {
+    const today = getDateStringInTimezone()
+    const costKey = `usage:platform:daily:${keyId}:${platform}:${today}`
+    // 使用 HGET 而不是 GET 来读取 HASH 类型的数据
+    const cost = await this.client.hget(costKey, 'cost')
+    const result = parseFloat(cost || 0)
+    logger.debug(
+      `💰 Getting platform daily cost for ${keyId}:${platform}, date: ${today}, key: ${costKey}, value: ${cost}, result: ${result}`
+    )
+    return result
+  }
+
+  // 💰 增加模型每日费用
+  async incrementModelDailyCost(keyId, model, amount) {
+    const today = getDateStringInTimezone()
+    const tzDate = getDateInTimezone()
+    const currentMonth = `${tzDate.getUTCFullYear()}-${String(tzDate.getUTCMonth() + 1).padStart(2, '0')}`
+    const currentHour = `${today}:${String(getHourInTimezone(new Date())).padStart(2, '0')}`
+
+    const dailyKey = `usage:model:daily:${keyId}:${model}:${today}`
+    const monthlyKey = `usage:model:monthly:${keyId}:${model}:${currentMonth}`
+    const hourlyKey = `usage:model:hourly:${keyId}:${model}:${currentHour}`
+    const totalKey = `usage:model:total:${keyId}:${model}`
+
+    logger.debug(
+      `💰 Incrementing model cost for ${keyId}:${model}, amount: $${amount}, date: ${today}, dailyKey: ${dailyKey}`
+    )
+
+    // 使用 HINCRBYFLOAT 而不是 INCRBYFLOAT 来保持 HASH 类型一致性
+    const results = await Promise.all([
+      this.client.hincrbyfloat(dailyKey, 'cost', amount),
+      this.client.hincrbyfloat(monthlyKey, 'cost', amount),
+      this.client.hincrbyfloat(hourlyKey, 'cost', amount),
+      this.client.hincrbyfloat(totalKey, 'cost', amount),
+      // 设置过期时间
+      this.client.expire(dailyKey, 86400 * 30), // 30天
+      this.client.expire(monthlyKey, 86400 * 90), // 90天
+      this.client.expire(hourlyKey, 86400 * 7) // 7天
+    ])
+
+    logger.debug(`💰 Model cost incremented successfully, new daily total: $${results[0]}`)
+    return parseFloat(results[0])
+  }
+
+  // 💰 获取模型每日费用
+  async getModelDailyCost(keyId, model) {
+    const today = getDateStringInTimezone()
+    const costKey = `usage:model:daily:${keyId}:${model}:${today}`
+    // 使用 HGET 而不是 GET 来读取 HASH 类型的数据
+    const cost = await this.client.hget(costKey, 'cost')
+    const result = parseFloat(cost || 0)
+    logger.debug(
+      `💰 Getting model daily cost for ${keyId}:${model}, date: ${today}, key: ${costKey}, value: ${cost}, result: ${result}`
+    )
+    return result
+  }
+
+  // 💰 获取平台总体费用
+  async getPlatformTotalCost(keyId, platform) {
+    const costKey = `usage:platform:total:${keyId}:${platform}`
+    // 使用 HGET 而不是 GET 来读取 HASH 类型的数据
+    const cost = await this.client.hget(costKey, 'cost')
+    const result = parseFloat(cost || 0)
+    logger.debug(
+      `💰 Getting platform total cost for ${keyId}:${platform}, key: ${costKey}, value: ${cost}, result: ${result}`
+    )
+    return result
+  }
+
+  // 💰 获取模型总体费用
+  async getModelTotalCost(keyId, model) {
+    const costKey = `usage:model:total:${keyId}:${model}`
+    // 使用 HGET 而不是 GET 来读取 HASH 类型的数据
+    const cost = await this.client.hget(costKey, 'cost')
+    const result = parseFloat(cost || 0)
+    logger.debug(
+      `💰 Getting model total cost for ${keyId}:${model}, key: ${costKey}, value: ${cost}, result: ${result}`
+    )
+    return result
+  }
+
+  // 💰 获取API Key的所有平台费用统计
+  async getAllPlatformCosts(keyId) {
+    const today = getDateStringInTimezone()
+    const dailyPattern = `usage:platform:daily:${keyId}:*:${today}`
+    const totalPattern = `usage:platform:total:${keyId}:*`
+
+    const [dailyKeys, totalKeys] = await Promise.all([
+      this.client.keys(dailyPattern),
+      this.client.keys(totalPattern)
+    ])
+
+    const costs = {}
+
+    // 获取每日费用
+    for (const key of dailyKeys) {
+      // 格式：usage:platform:daily:{keyId}:{platform}:{date}
+      const parts = key.split(':')
+      if (parts.length >= 5) {
+        const platform = parts[4]
+        const cost = await this.client.get(key)
+        if (!costs[platform]) {
+          costs[platform] = {}
+        }
+        costs[platform].daily = parseFloat(cost || 0)
+      }
+    }
+
+    // 获取总体费用
+    for (const key of totalKeys) {
+      // 格式：usage:platform:total:{keyId}:{platform}
+      const parts = key.split(':')
+      if (parts.length >= 4) {
+        const platform = parts.slice(3).join(':')
+        const cost = await this.client.get(key)
+        if (!costs[platform]) {
+          costs[platform] = {}
+        }
+        costs[platform].total = parseFloat(cost || 0)
+      }
+    }
+
+    // 确保所有平台都有daily和total属性
+    for (const platform in costs) {
+      if (!costs[platform].daily) {
+        costs[platform].daily = 0
+      }
+      if (!costs[platform].total) {
+        costs[platform].total = 0
+      }
+    }
+
+    return costs
+  }
+
+  // 💰 获取API Key的所有模型费用统计
+  async getAllModelCosts(keyId) {
+    const today = getDateStringInTimezone()
+    const dailyPattern = `usage:model:daily:${keyId}:*:${today}`
+    const totalPattern = `usage:model:total:${keyId}:*`
+
+    const [dailyKeys, totalKeys] = await Promise.all([
+      this.client.keys(dailyPattern),
+      this.client.keys(totalPattern)
+    ])
+
+    const costs = {}
+
+    // 获取每日费用
+    for (const key of dailyKeys) {
+      // 格式：usage:model:daily:{keyId}:{model}:{date}
+      const parts = key.split(':')
+      if (parts.length >= 5) {
+        const model = parts.slice(4, -1).join(':') // 支持模型名称中包含冒号
+        const cost = await this.client.get(key)
+        if (!costs[model]) {
+          costs[model] = {}
+        }
+        costs[model].daily = parseFloat(cost || 0)
+      }
+    }
+
+    // 获取总体费用
+    for (const key of totalKeys) {
+      // 格式：usage:model:total:{keyId}:{model}
+      const parts = key.split(':')
+      if (parts.length >= 4) {
+        const model = parts.slice(3).join(':')
+        const cost = await this.client.get(key)
+        if (!costs[model]) {
+          costs[model] = {}
+        }
+        costs[model].total = parseFloat(cost || 0)
+      }
+    }
+
+    // 确保所有模型都有daily和total属性
+    for (const model in costs) {
+      if (!costs[model].daily) {
+        costs[model].daily = 0
+      }
+      if (!costs[model].total) {
+        costs[model].total = 0
+      }
+    }
+
+    return costs
+  }
   async incrementWeeklyOpusCost(keyId, amount) {
     const currentWeek = getWeekStringInTimezone()
     const weeklyKey = `usage:opus:weekly:${keyId}:${currentWeek}`
@@ -1177,13 +1397,18 @@ class RedisClient {
       let apiKeysCreatedToday = 0
 
       if (allApiKeys.length > 0) {
-        const pipeline = this.client.pipeline()
-        allApiKeys.forEach((key) => pipeline.hget(key, 'createdAt'))
-        const results = await pipeline.exec()
+        // 过滤掉哈希映射表，只保留真正的API Key
+        const realApiKeys = allApiKeys.filter((key) => key !== 'apikey:hash_map')
 
-        for (const [error, createdAt] of results) {
-          if (!error && createdAt && createdAt.startsWith(today)) {
-            apiKeysCreatedToday++
+        if (realApiKeys.length > 0) {
+          const pipeline = this.client.pipeline()
+          realApiKeys.forEach((key) => pipeline.hget(key, 'createdAt'))
+          const results = await pipeline.exec()
+
+          for (const [error, createdAt] of results) {
+            if (!error && createdAt && createdAt.startsWith(today)) {
+              apiKeysCreatedToday++
+            }
           }
         }
       }
@@ -1215,6 +1440,9 @@ class RedisClient {
   async getSystemAverages() {
     try {
       const allApiKeys = await this.client.keys('apikey:*')
+      // 过滤掉哈希映射表，只保留真正的API Key
+      const realApiKeys = allApiKeys.filter((key) => key !== 'apikey:hash_map')
+
       let totalRequests = 0
       let totalTokens = 0
       let totalInputTokens = 0
@@ -1222,19 +1450,19 @@ class RedisClient {
       let oldestCreatedAt = new Date()
 
       // 批量获取所有usage数据和key数据，提高性能
-      const usageKeys = allApiKeys.map((key) => `usage:${key.replace('apikey:', '')}`)
+      const usageKeys = realApiKeys.map((key) => `usage:${key.replace('apikey:', '')}`)
       const pipeline = this.client.pipeline()
 
       // 添加所有usage查询
       usageKeys.forEach((key) => pipeline.hgetall(key))
       // 添加所有key数据查询
-      allApiKeys.forEach((key) => pipeline.hgetall(key))
+      realApiKeys.forEach((key) => pipeline.hgetall(key))
 
       const results = await pipeline.exec()
       const usageResults = results.slice(0, usageKeys.length)
       const keyResults = results.slice(usageKeys.length)
 
-      for (let i = 0; i < allApiKeys.length; i++) {
+      for (let i = 0; i < realApiKeys.length; i++) {
         const totalData = usageResults[i][1] || {}
         const keyData = keyResults[i][1] || {}
 
