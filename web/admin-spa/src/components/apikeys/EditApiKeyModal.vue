@@ -478,7 +478,7 @@
                     />
                     <button
                       class="rounded-lg bg-purple-500 px-3 py-2 text-white transition-colors hover:bg-purple-600 disabled:opacity-50"
-                      :disabled="!newModelName.trim()"
+                      :disabled="!newModelName?.trim()"
                       type="button"
                       @click="addModelLimit"
                     >
@@ -921,6 +921,9 @@ const availableUsers = ref([])
 const newTag = ref('')
 const availableTags = ref([])
 
+// 模型限制相关
+const newModelName = ref('')
+
 // 计算未选择的标签
 const unselectedTags = computed(() => {
   return availableTags.value.filter((tag) => !form.tags.includes(tag))
@@ -989,6 +992,18 @@ const quickAddRestrictedModel = (model) => {
 }
 
 // 新增：模型限制管理方法
+const addModelLimit = () => {
+  if (newModelName.value && newModelName.value.trim()) {
+    const modelName = newModelName.value.trim()
+    if (!form.modelLimits[modelName]) {
+      form.modelLimits[modelName] = {
+        totalLimit: '',
+        dailyLimit: ''
+      }
+    }
+    newModelName.value = ''
+  }
+}
 
 const removeModelLimit = (model) => {
   delete form.modelLimits[model]
