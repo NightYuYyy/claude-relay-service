@@ -587,12 +587,57 @@
                             :token-limit="key.tokenLimit || 0"
                           />
 
+                          <!-- 平台单独限额 -->
+                          <div
+                            v-if="hasPlatformLimit(key)"
+                            class="rounded-lg border border-purple-100 bg-white/90 px-2 py-1 text-[11px] shadow-sm dark:border-purple-800 dark:bg-gray-900/60"
+                          >
+                            <div
+                              v-for="item in getPlatformLimitSummaries(key)"
+                              :key="item.platform"
+                              class="flex items-center justify-between gap-2"
+                            >
+                              <span
+                                class="flex items-center gap-1 text-gray-600 dark:text-gray-300"
+                              >
+                                <i :class="['text-[10px]', item.icon]" />
+                                {{ item.label }}
+                              </span>
+                              <span
+                                v-if="item.dailyLimit"
+                                class="font-semibold text-gray-800 dark:text-gray-100"
+                              >
+                                ${{ item.dailyUsage.toFixed(2) }} / ${{
+                                  item.dailyLimit.toFixed(2)
+                                }}
+                              </span>
+                              <span v-else class="text-[10px] text-gray-500 dark:text-gray-400">
+                                未设置每日限额
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- 模型单独限额提示 -->
+                          <div
+                            v-if="hasModelLimit(key)"
+                            class="rounded-lg border border-indigo-100 bg-white/90 px-2 py-1 text-[11px] shadow-sm dark:border-indigo-800 dark:bg-gray-900/60"
+                          >
+                            <span
+                              class="flex items-center gap-1 text-indigo-600 dark:text-indigo-300"
+                            >
+                              <i class="fas fa-sliders-h text-[10px]" />
+                              模型限额 {{ Object.keys(key.modelLimits || {}).length }} 项
+                            </span>
+                          </div>
+
                           <!-- 如果没有任何限制 -->
                           <div
                             v-if="
                               !key.dailyCostLimit &&
                               !key.weeklyOpusCostLimit &&
-                              !key.rateLimitWindow
+                              !key.rateLimitWindow &&
+                              !hasPlatformLimit(key) &&
+                              !hasModelLimit(key)
                             "
                             class="dark:to-gray-750 relative h-7 w-full overflow-hidden rounded-md border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-gray-700 dark:from-gray-800"
                           >
@@ -2459,6 +2504,53 @@ const calculateModelCost = (stat) => {
 
   // 默认返回
   return '$0.000000'
+}
+
+const PLATFORM_LIMIT_META = {
+  claude: { label: 'Claude', icon: 'fas fa-brain text-purple-500' },
+  openai: { label: 'OpenAI', icon: 'fa-openai text-gray-700 dark:text-gray-300' },
+  gemini: { label: 'Gemini', icon: 'fas fa-robot text-amber-500' }
+}
+
+const hasPlatformLimit = (key) => {
+  if (!key.platformLimits) return false
+  return Object.values(key.platformLimits).some((config) => config && config.enabled)
+}
+
+const getPlatformLimitSummaries = (key) => {
+  if (!key.platformLimits) return []
+
+  const usage = key.platformUsage || {}
+
+  return Object.entries(key.platformLimits)
+    .filter(([, config]) => config && config.enabled)
+    .map(([platform, config]) => {
+      const meta = PLATFORM_LIMIT_META[platform] || {
+        label: platform.charAt(0).toUpperCase() + platform.slice(1),
+        icon: 'fas fa-layer-group text-gray-500'
+      }
+
+      const dailyLimit = Number(config.dailyLimit) || 0
+      const totalLimit = Number(config.totalLimit) || 0
+      const usageEntry = usage[platform] || {}
+      const dailyUsage = Number(usageEntry.daily) || 0
+      const totalUsage = Number(usageEntry.total) || 0
+
+      return {
+        platform,
+        label: meta.label,
+        icon: meta.icon,
+        dailyLimit,
+        totalLimit,
+        dailyUsage,
+        totalUsage
+      }
+    })
+}
+
+const hasModelLimit = (key) => {
+  const limits = key.modelLimits || {}
+  return Object.keys(limits).length > 0
 }
 
 // 获取日期范围内的请求数

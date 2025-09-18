@@ -224,6 +224,111 @@
             </span>
           </div>
         </div>
+
+        <!-- 平台级单独限额 -->
+        <div
+          v-if="platformLimitItems.length"
+          class="space-y-2 border-t border-gray-100 pt-3 dark:border-gray-700"
+        >
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 md:text-base"
+          >
+            <i class="fas fa-wallet text-purple-500" />
+            账户单独限额
+          </div>
+          <div class="space-y-2">
+            <div
+              v-for="item in platformLimitItems"
+              :key="item.key"
+              class="rounded-lg border border-purple-100 bg-white/90 px-3 py-2 shadow-sm dark:border-purple-800 dark:bg-gray-900/50"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <i :class="['text-xs md:text-sm', item.icon]" />
+                  <span class="font-semibold">{{ item.label }}</span>
+                </span>
+                <span
+                  v-if="item.dailyLimit"
+                  class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  ${{ item.dailyUsage.toFixed(2) }} / ${{ item.dailyLimit.toFixed(2) }}
+                </span>
+                <span v-else class="text-xs text-gray-500 dark:text-gray-400">未设置每日限额</span>
+              </div>
+              <div
+                v-if="item.dailyLimit"
+                class="mt-2 h-1.5 w-full rounded-full bg-purple-100 dark:bg-purple-800/40"
+              >
+                <div
+                  class="h-1.5 rounded-full transition-all duration-300"
+                  :class="item.progressClass"
+                  :style="{ width: item.progress + '%' }"
+                />
+              </div>
+              <div
+                class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400"
+              >
+                <span>今日：${{ item.dailyUsage.toFixed(2) }}</span>
+                <span v-if="item.totalLimit">
+                  累计：${{ item.totalUsage.toFixed(2) }} / ${{ item.totalLimit.toFixed(2) }}
+                </span>
+                <span v-else>累计：${{ item.totalUsage.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 模型级单独限额 -->
+        <div
+          v-if="modelLimitItems.length"
+          class="space-y-2 border-t border-gray-100 pt-3 dark:border-gray-700"
+        >
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 md:text-base"
+          >
+            <i class="fas fa-sliders-h text-indigo-500" />
+            模型单独限额
+          </div>
+          <div class="space-y-2">
+            <div
+              v-for="item in modelLimitItems"
+              :key="item.model"
+              class="rounded-lg border border-indigo-100 bg-white/90 px-3 py-2 shadow-sm dark:border-indigo-800 dark:bg-gray-900/50"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="flex-1 break-all font-semibold text-gray-700 dark:text-gray-200">
+                  {{ item.model }}
+                </span>
+                <span
+                  v-if="item.dailyLimit"
+                  class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  ${{ item.dailyUsage.toFixed(2) }} / ${{ item.dailyLimit.toFixed(2) }}
+                </span>
+                <span v-else class="text-xs text-gray-500 dark:text-gray-400">未设置每日限额</span>
+              </div>
+              <div
+                v-if="item.dailyLimit"
+                class="mt-2 h-1.5 w-full rounded-full bg-indigo-100 dark:bg-indigo-800/40"
+              >
+                <div
+                  class="h-1.5 rounded-full transition-all duration-300"
+                  :class="item.progressClass"
+                  :style="{ width: item.progress + '%' }"
+                />
+              </div>
+              <div
+                class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400"
+              >
+                <span>今日：${{ item.dailyUsage.toFixed(2) }}</span>
+                <span v-if="item.totalLimit">
+                  累计：${{ item.totalUsage.toFixed(2) }} / ${{ item.totalLimit.toFixed(2) }}
+                </span>
+                <span v-else>累计：${{ item.totalUsage.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -310,12 +415,85 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useApiStatsStore } from '@/stores/apistats'
 import WindowCountdown from '@/components/apikeys/WindowCountdown.vue'
 
 const apiStatsStore = useApiStatsStore()
 const { statsData, multiKeyMode, aggregatedStats, invalidKeys } = storeToRefs(apiStatsStore)
+
+const PLATFORM_META = {
+  claude: { label: 'Claude', icon: 'fas fa-brain text-purple-500' },
+  openai: { label: 'OpenAI', icon: 'fa-openai text-gray-700 dark:text-gray-300' },
+  gemini: { label: 'Gemini', icon: 'fas fa-robot text-amber-500' }
+}
+
+const platformLimitItems = computed(() => {
+  if (!statsData.value || !statsData.value.platformLimits) return []
+
+  const usage = statsData.value.platformUsage || {}
+
+  return Object.entries(statsData.value.platformLimits)
+    .filter(([, config]) => config && config.enabled)
+    .map(([key, config]) => {
+      const meta = PLATFORM_META[key] || {
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        icon: 'fas fa-layer-group text-gray-500'
+      }
+
+      const dailyLimit = Number(config.dailyLimit) || 0
+      const totalLimit = Number(config.totalLimit) || 0
+      const usageEntry = usage[key] || {}
+      const dailyUsage = Number(usageEntry.daily) || 0
+      const totalUsage = Number(usageEntry.total) || 0
+      const progress = dailyLimit > 0 ? Math.min((dailyUsage / dailyLimit) * 100, 100) : 0
+      const progressClass =
+        progress >= 100 ? 'bg-red-500' : progress >= 80 ? 'bg-yellow-500' : 'bg-emerald-500'
+
+      return {
+        key,
+        label: meta.label,
+        icon: meta.icon,
+        dailyLimit,
+        totalLimit,
+        dailyUsage,
+        totalUsage,
+        progress,
+        progressClass
+      }
+    })
+})
+
+const modelLimitItems = computed(() => {
+  if (!statsData.value || !statsData.value.modelLimits) return []
+
+  const usage = statsData.value.modelUsage || {}
+
+  return Object.entries(statsData.value.modelLimits)
+    .map(([model, config]) => {
+      const dailyLimit = Number(config.dailyLimit) || 0
+      const totalLimit = Number(config.totalLimit) || 0
+      const usageEntry = usage[model] || {}
+      const dailyUsage = Number(usageEntry.daily) || 0
+      const totalUsage = Number(usageEntry.total) || 0
+      const progress = dailyLimit > 0 ? Math.min((dailyUsage / dailyLimit) * 100, 100) : 0
+      const progressClass =
+        progress >= 100 ? 'bg-red-500' : progress >= 80 ? 'bg-yellow-500' : 'bg-indigo-500'
+
+      return {
+        model,
+        dailyLimit,
+        totalLimit,
+        dailyUsage,
+        totalUsage,
+        progress,
+        progressClass
+      }
+    })
+    .filter((item) => item.dailyLimit > 0 || item.totalLimit > 0)
+    .sort((a, b) => (b.dailyLimit || 0) - (a.dailyLimit || 0))
+})
 
 // 获取每日费用进度
 const getDailyCostProgress = () => {

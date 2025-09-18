@@ -375,6 +375,20 @@ class ApiKeyService {
         modelLimits = {}
       }
 
+      let platformUsage = {}
+      try {
+        platformUsage = await redis.getAllPlatformCosts(keyData.id)
+      } catch (e) {
+        platformUsage = {}
+      }
+
+      let modelUsage = {}
+      try {
+        modelUsage = await redis.getAllModelCosts(keyData.id)
+      } catch (e) {
+        modelUsage = {}
+      }
+
       return {
         valid: true,
         keyData: {
@@ -411,6 +425,8 @@ class ApiKeyService {
           tags,
           platformLimits, // 新增：平台级限额配置
           modelLimits, // 新增：模型级限额配置
+          platformUsage, // 新增：平台级使用统计
+          modelUsage, // 新增：模型级费用统计
           usage
         }
       }
@@ -534,6 +550,16 @@ class ApiKeyService {
           key.modelLimits = key.modelLimits ? JSON.parse(key.modelLimits) : {}
         } catch (e) {
           key.modelLimits = {}
+        }
+        try {
+          key.platformUsage = await redis.getAllPlatformCosts(key.id)
+        } catch (e) {
+          key.platformUsage = {}
+        }
+        try {
+          key.modelUsage = await redis.getAllModelCosts(key.id)
+        } catch (e) {
+          key.modelUsage = {}
         }
         // 不暴露已弃用字段
         if (Object.prototype.hasOwnProperty.call(key, 'ccrAccountId')) {

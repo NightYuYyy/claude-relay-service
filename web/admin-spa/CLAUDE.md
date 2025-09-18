@@ -11,6 +11,10 @@
 - `src/stores/`：Pinia 状态管理，封装 API 访问
 - `vite.config.js`：构建配置，使用 Vite + Element Plus 自动导入
 
+## 最新调整（2025-09-19）
+- `views/ApiKeysView.vue` 增补账户单独限额进度展示，与后端平台/模型费用统计保持一致。
+- `components/apistats/LimitConfig.vue` 新增平台/模型限额卡片，若增加新的限额维度需同步维护该组件与 `stores/apistats.js`。
+
 ## 协作约定
 - 前端代码遵循 ESLint + Prettier，执行 `npm run lint` / `npm run format`
 - 组件按领域分类放置，新增组件需在相应子目录附带 `AGENTS.md`
@@ -19,6 +23,7 @@
 ## Cargo Check 教训
 - 触发告警的根因：某通用脚本在全部项目中默认执行 `cargo check`
 - 前端目录已确认纯 JS/TS，无 Rust 依赖；现已在开发文档中明示移除此步骤
+- 2025-09-19：再次核对目录结构，确认未存在 `Cargo.toml`；如需在 CI 中执行 `cargo`，务必先检测目标目录。
 - 若引入 WebAssembly/Rust，请放入独立子目录并在构建脚本中显式处理
 
 ## Linus 精神守则

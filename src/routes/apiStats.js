@@ -382,6 +382,11 @@ router.post('/api/user-stats', async (req, res) => {
         windowEndTime,
         windowRemainingSeconds
       },
+      // 平台与模型级别限制配置与使用情况
+      platformLimits: fullKeyData.platformLimits || {},
+      platformUsage: fullKeyData.platformUsage || {},
+      modelLimits: fullKeyData.modelLimits || {},
+      modelUsage: fullKeyData.modelUsage || {},
 
       // 绑定的账户信息（只显示ID，不显示敏感信息）
       accounts: {
