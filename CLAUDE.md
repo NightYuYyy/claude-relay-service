@@ -273,3 +273,33 @@ Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+# AGENTS 指南（根目录）
+
+## 目录职责
+- 统一协调 Express 后端、Vue 前端与自动化脚本，维系 Claude Relay Service 的整体交付
+- 汇集配置、运行脚本、CI/CD 工作流与运维资料，作为工程协作的起点
+- 保留历史发布信息与合规文档，支撑版本演进与审计追踪
+
+## 关键子目录
+- `src/`：Node.js 后端核心实现（路由、服务、Redis 适配层等）
+- `web/admin-spa/`：Vue3 + Element Plus 管理端前端代码
+- `scripts/` 与 `cli/`：批处理脚本、交互式 CLI 管理工具
+- `.github/workflows/`：自动发布、质量检查流水线
+- `resources/model-pricing/`：模型单价、上下文窗口等静态资源
+
+## 协作约定
+- 后端改动必须执行 `npm run lint` 与必要的集成测试；前端改动需在 `web/admin-spa` 内运行 `npm run lint`
+- 所有密钥、证书、真实配置仅放在 `.env` / `data/` 等被忽略目录，不得入库
+- 提交前请同步更新对应目录下的 `AGENTS.md` / `CLAUDE.md`，保持知识同步
+- 发布分支仍由自动化流水线推进，切勿直接向 `main` 推送未经审查的大改
+
+## Cargo Check 教训
+- 早期有同事在通用验证脚本中盲目调用 `cargo check`，导致 CI 冒出 "could not find `Cargo.toml`" 警告
+- 现已确认本仓库不含 Rust 工程，已在开发手册中明确移除该步骤，并在文档中注明
+- 结论：保持工具链最小化，避免与项目无关的构建步骤干扰质量信号
+
+## Linus 精神守则
+- 代码即契约：提交前自证可读、可靠、可维护
+- 偏好小步迭代、可复现环境，拒绝“编译器会提醒我”的侥幸
+- 保持对社区常识的尊重（Shell、Git、CI 流水线），让后继维护者能“十分钟理解、两小时接手”
