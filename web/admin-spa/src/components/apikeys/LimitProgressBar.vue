@@ -48,7 +48,7 @@ const props = defineProps({
   type: {
     type: String,
     required: true,
-    validator: (value) => ['daily', 'opus', 'window'].includes(value)
+    validator: (value) => ['daily', 'opus', 'window', 'total'].includes(value)
   },
   label: {
     type: String,
@@ -88,6 +88,8 @@ const backgroundClass = computed(() => {
       return 'bg-violet-50/50 dark:bg-violet-950/20'
     case 'window':
       return 'bg-sky-50/50 dark:bg-sky-950/20'
+    case 'total':
+      return 'bg-emerald-50/50 dark:bg-emerald-950/20'
     default:
       return 'bg-gray-100/50 dark:bg-gray-800/30'
   }
@@ -127,6 +129,16 @@ const progressBarClass = computed(() => {
     }
   }
 
+  if (props.type === 'total') {
+    if (p >= 90) {
+      return 'bg-red-400 dark:bg-red-500'
+    } else if (p >= 70) {
+      return 'bg-amber-400 dark:bg-amber-500'
+    } else {
+      return 'bg-teal-400 dark:bg-teal-500'
+    }
+  }
+
   return 'bg-gray-300 dark:bg-gray-400'
 })
 
@@ -151,6 +163,9 @@ const iconClass = computed(() => {
       case 'window':
         colorClass = 'text-blue-700 dark:text-blue-400'
         break
+      case 'total':
+        colorClass = 'text-teal-700 dark:text-teal-400'
+        break
       default:
         colorClass = 'text-gray-600 dark:text-gray-400'
     }
@@ -166,6 +181,9 @@ const iconClass = computed(() => {
       break
     case 'window':
       iconName = 'fas fa-clock'
+      break
+    case 'total':
+      iconName = 'fas fa-layer-group'
       break
     default:
       iconName = 'fas fa-infinity'
@@ -191,6 +209,8 @@ const labelTextClass = computed(() => {
         return 'text-purple-900 dark:text-purple-100'
       case 'window':
         return 'text-blue-900 dark:text-blue-100'
+      case 'total':
+        return 'text-teal-900 dark:text-teal-100'
       default:
         return 'text-gray-900 dark:text-gray-100'
     }
@@ -219,6 +239,8 @@ const currentValueClass = computed(() => {
           return 'text-purple-800 dark:text-purple-200'
         case 'window':
           return 'text-blue-800 dark:text-blue-200'
+        case 'total':
+          return 'text-teal-800 dark:text-teal-200'
         default:
           return 'text-gray-900 dark:text-gray-100'
       }

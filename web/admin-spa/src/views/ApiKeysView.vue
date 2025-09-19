@@ -295,7 +295,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[4%] min-w-[40px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[7%] min-w-[90px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('periodCost')"
                     >
                       费用
@@ -315,7 +315,7 @@
                       限制
                     </th>
                     <th
-                      class="w-[5%] min-w-[45px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[7%] min-w-[90px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('periodTokens')"
                     >
                       Token
@@ -545,7 +545,10 @@
                         </span>
                       </td>
                       <!-- 费用 -->
-                      <td class="whitespace-nowrap px-3 py-3 text-right" style="font-size: 13px">
+                      <td
+                        class="min-w-[90px] whitespace-nowrap px-3 py-3 text-right"
+                        style="font-size: 13px"
+                      >
                         <span
                           class="font-semibold text-blue-600 dark:text-blue-400"
                           style="font-size: 14px"
@@ -554,104 +557,131 @@
                         </span>
                       </td>
                       <!-- 限制 -->
-                      <td class="px-2 py-2" style="font-size: 12px">
-                        <div class="flex flex-col gap-2">
-                          <!-- 每日费用限制进度条 -->
-                          <LimitProgressBar
-                            v-if="key.dailyCostLimit > 0"
-                            :current="key.dailyCost || 0"
-                            label="每日"
-                            :limit="key.dailyCostLimit"
-                            type="daily"
-                          />
-
-                          <!-- Opus 周费用限制进度条 -->
-                          <LimitProgressBar
-                            v-if="key.weeklyOpusCostLimit > 0"
-                            :current="key.weeklyOpusCost || 0"
-                            label="Opus"
-                            :limit="key.weeklyOpusCostLimit"
-                            type="opus"
-                          />
-
-                          <!-- 时间窗口限制进度条 -->
-                          <WindowLimitBar
-                            v-if="key.rateLimitWindow > 0"
-                            :cost-limit="key.rateLimitCost || 0"
-                            :current-cost="key.currentWindowCost || 0"
-                            :current-requests="key.currentWindowRequests || 0"
-                            :current-tokens="key.currentWindowTokens || 0"
-                            :rate-limit-window="key.rateLimitWindow"
-                            :remaining-seconds="key.windowRemainingSeconds || 0"
-                            :request-limit="key.rateLimitRequests || 0"
-                            :token-limit="key.tokenLimit || 0"
-                          />
-
-                          <!-- 平台单独限额 -->
-                          <div
-                            v-if="hasPlatformLimit(key)"
-                            class="rounded-lg border border-purple-100 bg-white/90 px-2 py-1 text-[11px] shadow-sm dark:border-purple-800 dark:bg-gray-900/60"
+                      <td class="px-2 py-2 align-top" style="font-size: 12px">
+                        <div
+                          v-if="getLimitChips(key).length > 0"
+                          class="flex flex-wrap items-center gap-2"
+                        >
+                          <el-tooltip
+                            v-for="chip in getLimitChips(key)"
+                            :key="chip.id"
+                            :disabled="chip.disableTooltip"
+                            effect="dark"
+                            placement="top"
+                            popper-class="limit-tooltip-popper"
                           >
-                            <div
-                              v-for="item in getPlatformLimitSummaries(key)"
-                              :key="item.platform"
-                              class="flex items-center justify-between gap-2"
-                            >
-                              <span
-                                class="flex items-center gap-1 text-gray-600 dark:text-gray-300"
-                              >
-                                <i :class="['text-[10px]', item.icon]" />
-                                {{ item.label }}
-                              </span>
-                              <span
-                                v-if="item.dailyLimit"
-                                class="font-semibold text-gray-800 dark:text-gray-100"
-                              >
-                                ${{ item.dailyUsage.toFixed(2) }} / ${{
-                                  item.dailyLimit.toFixed(2)
-                                }}
-                              </span>
-                              <span v-else class="text-[10px] text-gray-500 dark:text-gray-400">
-                                未设置每日限额
-                              </span>
-                            </div>
-                          </div>
+                            <template v-if="!chip.disableTooltip" #content>
+                              <div class="limit-tooltip">
+                                <div v-if="chip.tooltipTitle" class="limit-tooltip__title">
+                                  {{ chip.tooltipTitle }}
+                                </div>
 
-                          <!-- 模型单独限额提示 -->
-                          <div
-                            v-if="hasModelLimit(key)"
-                            class="rounded-lg border border-indigo-100 bg-white/90 px-2 py-1 text-[11px] shadow-sm dark:border-indigo-800 dark:bg-gray-900/60"
-                          >
+                                <template
+                                  v-if="
+                                    chip.type === 'total' ||
+                                    chip.type === 'daily' ||
+                                    chip.type === 'opus'
+                                  "
+                                >
+                                  <LimitProgressBar
+                                    :current="chip.current"
+                                    :label="chip.progressLabel"
+                                    :limit="chip.limit"
+                                    :type="chip.limitType"
+                                  />
+                                  <div class="limit-tooltip__meta">
+                                    <span>已用：${{ chip.current.toFixed(2) }}</span>
+                                    <span>上限：${{ chip.limit.toFixed(2) }}</span>
+                                  </div>
+                                </template>
+
+                                <template v-else-if="chip.type === 'window'">
+                                  <WindowLimitBar
+                                    :cost-limit="chip.window.costLimit"
+                                    :current-cost="chip.window.currentCost"
+                                    :current-requests="chip.window.currentRequests"
+                                    :current-tokens="chip.window.currentTokens"
+                                    :rate-limit-window="chip.window.windowSeconds"
+                                    :remaining-seconds="chip.window.remainingSeconds"
+                                    :request-limit="chip.window.requestLimit"
+                                    :token-limit="chip.window.tokenLimit"
+                                  />
+                                  <div class="limit-tooltip__meta">
+                                    <span>窗口：{{ chip.window.windowLabel }}</span>
+                                  </div>
+                                </template>
+
+                                <template v-else-if="chip.type === 'platform'">
+                                  <div class="space-y-2">
+                                    <div
+                                      v-for="item in chip.platforms"
+                                      :key="item.platform"
+                                      class="flex items-center justify-between gap-3"
+                                    >
+                                      <span class="flex items-center gap-1 text-xs text-gray-200">
+                                        <i :class="['text-[10px]', item.icon]" />
+                                        {{ item.label }}
+                                      </span>
+                                      <div
+                                        class="text-right text-[11px] leading-tight text-gray-200"
+                                      >
+                                        <div v-if="item.dailyLimit">
+                                          每日：${{ item.dailyUsage.toFixed(2) }} / ${{
+                                            item.dailyLimit.toFixed(2)
+                                          }}
+                                        </div>
+                                        <div v-else>每日：未设置</div>
+                                        <div v-if="item.totalLimit">
+                                          累计：${{ item.totalUsage.toFixed(2) }} / ${{
+                                            item.totalLimit.toFixed(2)
+                                          }}
+                                        </div>
+                                        <div v-else>累计：未设置</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </template>
+
+                                <template v-else-if="chip.type === 'model'">
+                                  <div class="text-xs text-gray-200">
+                                    配置了
+                                    {{ chip.modelCount }} 个模型限额，可在编辑弹窗中查看详情。
+                                  </div>
+                                </template>
+                              </div>
+                            </template>
+
                             <span
-                              class="flex items-center gap-1 text-indigo-600 dark:text-indigo-300"
+                              :class="[
+                                'limit-chip',
+                                chip.className,
+                                chip.isCritical
+                                  ? 'limit-chip--critical'
+                                  : chip.isWarning
+                                    ? 'limit-chip--warning'
+                                    : ''
+                              ]"
                             >
-                              <i class="fas fa-sliders-h text-[10px]" />
-                              模型限额 {{ Object.keys(key.modelLimits || {}).length }} 项
+                              <i :class="['text-[10px]', chip.icon]" />
+                              {{ chip.label }}
                             </span>
-                          </div>
-
-                          <!-- 如果没有任何限制 -->
-                          <div
-                            v-if="
-                              !key.dailyCostLimit &&
-                              !key.weeklyOpusCostLimit &&
-                              !key.rateLimitWindow &&
-                              !hasPlatformLimit(key) &&
-                              !hasModelLimit(key)
-                            "
-                            class="dark:to-gray-750 relative h-7 w-full overflow-hidden rounded-md border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-gray-700 dark:from-gray-800"
-                          >
-                            <div class="flex h-full items-center justify-center gap-1.5">
-                              <i class="fas fa-infinity text-xs text-gray-400 dark:text-gray-500" />
-                              <span class="text-xs font-medium text-gray-400 dark:text-gray-500">
-                                无限制
-                              </span>
-                            </div>
+                          </el-tooltip>
+                        </div>
+                        <div
+                          v-else
+                          class="dark:to-gray-750 relative h-7 w-full overflow-hidden rounded-md border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 text-center text-xs font-medium text-gray-400 dark:border-gray-700 dark:from-gray-800 dark:text-gray-500"
+                        >
+                          <div class="flex h-full items-center justify-center gap-1.5">
+                            <i class="fas fa-infinity text-xs" />
+                            无限制
                           </div>
                         </div>
                       </td>
                       <!-- Token数量 -->
-                      <td class="whitespace-nowrap px-3 py-3 text-right" style="font-size: 13px">
+                      <td
+                        class="min-w-[90px] whitespace-nowrap px-3 py-3 text-right"
+                        style="font-size: 13px"
+                      >
                         <div class="flex items-center justify-end gap-1">
                           <span
                             class="font-medium text-purple-600 dark:text-purple-400"
@@ -1240,51 +1270,132 @@
                   </div>
                 </div>
 
-                <!-- 限制进度条 -->
+                <!-- 限制信息 -->
                 <div class="space-y-2">
-                  <!-- 每日费用限制 -->
-                  <LimitProgressBar
-                    v-if="key.dailyCostLimit > 0"
-                    :current="key.dailyCost || 0"
-                    label="每日"
-                    :limit="key.dailyCostLimit"
-                    type="daily"
-                  />
-
-                  <!-- Opus 周费用限制 -->
-                  <LimitProgressBar
-                    v-if="key.weeklyOpusCostLimit > 0"
-                    :current="key.weeklyOpusCost || 0"
-                    label="Opus"
-                    :limit="key.weeklyOpusCostLimit"
-                    type="opus"
-                  />
-
-                  <!-- 时间窗口限制 -->
-                  <WindowLimitBar
-                    v-if="key.rateLimitWindow > 0"
-                    :cost-limit="key.rateLimitCost || 0"
-                    :current-cost="key.currentWindowCost || 0"
-                    :current-requests="key.currentWindowRequests || 0"
-                    :current-tokens="key.currentWindowTokens || 0"
-                    :rate-limit-window="key.rateLimitWindow"
-                    :remaining-seconds="key.windowRemainingSeconds || 0"
-                    :request-limit="key.rateLimitRequests || 0"
-                    :token-limit="key.tokenLimit || 0"
-                  />
-
-                  <!-- 无限制显示 -->
+                  <div v-if="getLimitChips(key).length > 0" class="flex flex-wrap gap-2">
+                    <span
+                      v-for="chip in getLimitChips(key)"
+                      :key="chip.id"
+                      :class="[
+                        'limit-chip limit-chip--compact',
+                        chip.className,
+                        chip.isCritical
+                          ? 'limit-chip--critical'
+                          : chip.isWarning
+                            ? 'limit-chip--warning'
+                            : ''
+                      ]"
+                    >
+                      <i :class="['text-[10px]', chip.icon]" />
+                      {{ chip.label }}
+                    </span>
+                  </div>
                   <div
-                    v-if="!key.dailyCostLimit && !key.weeklyOpusCostLimit && !key.rateLimitWindow"
-                    class="dark:to-gray-750 relative h-7 w-full overflow-hidden rounded-md border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-gray-700 dark:from-gray-800"
+                    v-else
+                    class="dark:to-gray-750 relative h-7 w-full overflow-hidden rounded-md border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 text-center text-xs font-medium text-gray-400 dark:border-gray-700 dark:from-gray-800 dark:text-gray-500"
                   >
                     <div class="flex h-full items-center justify-center gap-1.5">
-                      <i class="fas fa-infinity text-xs text-gray-400 dark:text-gray-500" />
-                      <span class="text-xs font-medium text-gray-400 dark:text-gray-500">
-                        无限制
-                      </span>
+                      <i class="fas fa-infinity text-xs" />
+                      无限制
                     </div>
                   </div>
+
+                  <button
+                    v-if="getLimitDetailsAvailable(key)"
+                    class="limit-detail-toggle"
+                    @click="toggleLimitDetails(key.id)"
+                  >
+                    <span>{{
+                      limitDetailsExpanded[key.id] ? '收起限制详情' : '查看限制详情'
+                    }}</span>
+                    <i
+                      :class="[
+                        'fas',
+                        limitDetailsExpanded[key.id] ? 'fa-chevron-up' : 'fa-chevron-down'
+                      ]"
+                    />
+                  </button>
+
+                  <transition name="fade">
+                    <div
+                      v-if="limitDetailsExpanded[key.id]"
+                      class="space-y-2 rounded-lg bg-white/80 p-3 shadow-sm dark:bg-gray-800/60"
+                    >
+                      <LimitProgressBar
+                        v-if="key.totalCostLimit > 0"
+                        :current="key.totalCost || 0"
+                        label="累计"
+                        :limit="key.totalCostLimit"
+                        type="total"
+                      />
+
+                      <LimitProgressBar
+                        v-if="key.dailyCostLimit > 0"
+                        :current="key.dailyCost || 0"
+                        label="每日"
+                        :limit="key.dailyCostLimit"
+                        type="daily"
+                      />
+
+                      <LimitProgressBar
+                        v-if="key.weeklyOpusCostLimit > 0"
+                        :current="key.weeklyOpusCost || 0"
+                        label="Opus"
+                        :limit="key.weeklyOpusCostLimit"
+                        type="opus"
+                      />
+
+                      <WindowLimitBar
+                        v-if="key.rateLimitWindow > 0"
+                        :cost-limit="key.rateLimitCost || 0"
+                        :current-cost="key.currentWindowCost || 0"
+                        :current-requests="key.currentWindowRequests || 0"
+                        :current-tokens="key.currentWindowTokens || 0"
+                        :rate-limit-window="key.rateLimitWindow"
+                        :remaining-seconds="key.windowRemainingSeconds || 0"
+                        :request-limit="key.rateLimitRequests || 0"
+                        :token-limit="key.tokenLimit || 0"
+                      />
+
+                      <div
+                        v-if="hasPlatformLimit(key)"
+                        class="space-y-1 rounded-md border border-purple-100 bg-white/80 p-2 text-[11px] dark:border-purple-800 dark:bg-gray-900/60"
+                      >
+                        <div
+                          v-for="item in getPlatformLimitSummaries(key)"
+                          :key="item.platform"
+                          class="flex items-center justify-between gap-2"
+                        >
+                          <span class="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                            <i :class="['text-[10px]', item.icon]" />
+                            {{ item.label }}
+                          </span>
+                          <div class="text-right leading-tight">
+                            <div v-if="item.dailyLimit">
+                              每日：${{ item.dailyUsage.toFixed(2) }} / ${{
+                                item.dailyLimit.toFixed(2)
+                              }}
+                            </div>
+                            <div v-else>每日：未设置</div>
+                            <div v-if="item.totalLimit">
+                              累计：${{ item.totalUsage.toFixed(2) }} / ${{
+                                item.totalLimit.toFixed(2)
+                              }}
+                            </div>
+                            <div v-else>累计：未设置</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        v-if="hasModelLimit(key)"
+                        class="rounded-md border border-indigo-100 bg-white/80 px-2 py-1 text-[11px] text-indigo-600 dark:border-indigo-800 dark:bg-gray-900/60 dark:text-indigo-300"
+                      >
+                        <i class="fas fa-sliders-h mr-1 text-[10px]" />
+                        模型限额 {{ Object.keys(key.modelLimits || {}).length }} 项
+                      </div>
+                    </div>
+                  </transition>
                 </div>
               </div>
 
@@ -1887,6 +1998,7 @@ const deletedApiKeysLoading = ref(false)
 const apiKeysSortBy = ref('periodCost')
 const apiKeysSortOrder = ref('desc')
 const expandedApiKeys = ref({})
+const limitDetailsExpanded = ref({})
 const apiKeyModelStats = ref({})
 const apiKeyDateFilters = ref({})
 const defaultTime = ref([new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 2, 1, 23, 59, 59)])
@@ -2551,6 +2663,198 @@ const getPlatformLimitSummaries = (key) => {
 const hasModelLimit = (key) => {
   const limits = key.modelLimits || {}
   return Object.keys(limits).length > 0
+}
+
+const LIMIT_CHIP_META = {
+  total: {
+    label: '累计',
+    className: 'limit-chip--total',
+    icon: 'fas fa-layer-group',
+    tooltipTitle: '累计费用限额',
+    progressLabel: '累计'
+  },
+  daily: {
+    label: '每日',
+    className: 'limit-chip--daily',
+    icon: 'fas fa-calendar-day',
+    tooltipTitle: '每日费用限额',
+    progressLabel: '每日'
+  },
+  opus: {
+    label: 'Opus',
+    className: 'limit-chip--opus',
+    icon: 'fas fa-gem',
+    tooltipTitle: 'Opus 周费用限额',
+    progressLabel: 'Opus'
+  },
+  window: {
+    label: '窗口',
+    className: 'limit-chip--window',
+    icon: 'fas fa-clock',
+    tooltipTitle: '时间窗口限制'
+  },
+  platform: {
+    label: '平台',
+    className: 'limit-chip--platform',
+    icon: 'fas fa-sitemap',
+    tooltipTitle: '平台单独限额'
+  },
+  model: {
+    label: '模型',
+    className: 'limit-chip--model',
+    icon: 'fas fa-sliders-h',
+    tooltipTitle: '模型限额'
+  }
+}
+
+const calculateUsagePercentage = (current, limit) => {
+  if (!limit || limit <= 0) return 0
+  return (current / limit) * 100
+}
+
+const formatLimitPercentage = (current, limit) => {
+  const percentage = calculateUsagePercentage(current, limit)
+  if (percentage >= 100) return '100%'
+  if (percentage >= 10) return `${Math.round(percentage)}%`
+  return `${percentage.toFixed(1)}%`
+}
+
+const formatWindowDuration = (seconds) => {
+  const value = Number(seconds) || 0
+  if (value <= 0) return '实时'
+  const minutes = Math.floor(value / 60)
+  const remaining = value % 60
+  if (minutes >= 1) {
+    return remaining ? `${minutes}分${remaining}秒` : `${minutes}分钟`
+  }
+  return `${remaining}秒`
+}
+
+const getLimitChips = (key) => {
+  const chips = []
+
+  const pushCostChip = (type, current, limit) => {
+    if (!limit || limit <= 0) return
+    const meta = LIMIT_CHIP_META[type]
+    const percentage = calculateUsagePercentage(current, limit)
+    chips.push({
+      id: `${type}-${key.id}`,
+      type,
+      label: `${meta.label} ${formatLimitPercentage(current, limit)}`,
+      className: meta.className,
+      icon: meta.icon,
+      tooltipTitle: meta.tooltipTitle,
+      progressLabel: meta.progressLabel,
+      limitType: type,
+      current,
+      limit,
+      disableTooltip: false,
+      isWarning: percentage >= 70 && percentage < 90,
+      isCritical: percentage >= 90
+    })
+  }
+
+  pushCostChip('total', Number(key.totalCost) || 0, Number(key.totalCostLimit) || 0)
+  pushCostChip('daily', Number(key.dailyCost) || 0, Number(key.dailyCostLimit) || 0)
+  pushCostChip('opus', Number(key.weeklyOpusCost) || 0, Number(key.weeklyOpusCostLimit) || 0)
+
+  if (Number(key.rateLimitWindow) > 0) {
+    const costLimit = Number(key.rateLimitCost) || 0
+    const currentCost = Number(key.currentWindowCost) || 0
+    const requestLimit = Number(key.rateLimitRequests) || 0
+    const currentRequests = Number(key.currentWindowRequests) || 0
+    const tokenLimit = Number(key.tokenLimit) || 0
+    const currentTokens = Number(key.currentWindowTokens) || 0
+
+    const percentages = [
+      calculateUsagePercentage(currentCost, costLimit),
+      calculateUsagePercentage(currentRequests, requestLimit),
+      calculateUsagePercentage(currentTokens, tokenLimit)
+    ].filter((value) => Number.isFinite(value))
+
+    const peakPercentage = percentages.length > 0 ? Math.max(...percentages) : 0
+    const meta = LIMIT_CHIP_META.window
+
+    chips.push({
+      id: `window-${key.id}`,
+      type: 'window',
+      label: `${meta.label} ${formatWindowDuration(key.rateLimitWindow)}`,
+      className: meta.className,
+      icon: meta.icon,
+      tooltipTitle: meta.tooltipTitle,
+      disableTooltip: false,
+      isWarning: peakPercentage >= 70 && peakPercentage < 90,
+      isCritical: peakPercentage >= 90,
+      window: {
+        costLimit,
+        currentCost,
+        requestLimit,
+        currentRequests,
+        tokenLimit,
+        currentTokens,
+        remainingSeconds: Number(key.windowRemainingSeconds) || 0,
+        windowSeconds: Number(key.rateLimitWindow) || 0,
+        windowLabel: formatWindowDuration(key.rateLimitWindow)
+      }
+    })
+  }
+
+  if (hasPlatformLimit(key)) {
+    const platforms = getPlatformLimitSummaries(key)
+    const highest = platforms.reduce((max, item) => {
+      const daily = calculateUsagePercentage(item.dailyUsage, item.dailyLimit)
+      const total = calculateUsagePercentage(item.totalUsage, item.totalLimit)
+      return Math.max(max, daily, total)
+    }, 0)
+    const meta = LIMIT_CHIP_META.platform
+    chips.push({
+      id: `platform-${key.id}`,
+      type: 'platform',
+      label: `${meta.label} ${platforms.length}`,
+      className: meta.className,
+      icon: meta.icon,
+      tooltipTitle: meta.tooltipTitle,
+      disableTooltip: false,
+      platforms,
+      isWarning: highest >= 70 && highest < 90,
+      isCritical: highest >= 90
+    })
+  }
+
+  const modelCount = Object.keys(key.modelLimits || {}).length
+  if (modelCount > 0) {
+    const meta = LIMIT_CHIP_META.model
+    chips.push({
+      id: `model-${key.id}`,
+      type: 'model',
+      label: `${meta.label} ${modelCount}`,
+      className: meta.className,
+      icon: meta.icon,
+      tooltipTitle: meta.tooltipTitle,
+      disableTooltip: false,
+      modelCount,
+      isWarning: false,
+      isCritical: false
+    })
+  }
+
+  return chips
+}
+
+const getLimitDetailsAvailable = (key) => {
+  return (
+    (Number(key.totalCostLimit) || 0) > 0 ||
+    (Number(key.dailyCostLimit) || 0) > 0 ||
+    (Number(key.weeklyOpusCostLimit) || 0) > 0 ||
+    (Number(key.rateLimitWindow) || 0) > 0 ||
+    hasPlatformLimit(key) ||
+    hasModelLimit(key)
+  )
+}
+
+const toggleLimitDetails = (keyId) => {
+  const id = String(keyId)
+  limitDetailsExpanded.value[id] = !limitDetailsExpanded.value[id]
 }
 
 // 获取日期范围内的请求数
@@ -3751,10 +4055,16 @@ watch(pageSize, (newSize) => {
 
 // 监听API Keys数据变化，清理无效的选中状态
 watch(apiKeys, () => {
-  const validIds = new Set(apiKeys.value.map((key) => key.id))
+  const validIds = new Set(apiKeys.value.map((key) => String(key.id)))
 
   // 过滤出仍然有效的选中项
-  selectedApiKeys.value = selectedApiKeys.value.filter((id) => validIds.has(id))
+  selectedApiKeys.value = selectedApiKeys.value.filter((id) => validIds.has(String(id)))
+
+  Object.keys(limitDetailsExpanded.value).forEach((id) => {
+    if (!validIds.has(id)) {
+      delete limitDetailsExpanded.value[id]
+    }
+  })
 
   updateSelectAllState()
 })
@@ -3863,5 +4173,175 @@ onMounted(async () => {
 }
 .custom-date-range-picker :deep(.el-range-separator) {
   @apply mx-2 text-gray-500;
+}
+
+.limit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.6);
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.limit-chip i {
+  font-size: 0.65rem;
+}
+
+.limit-chip--compact {
+  padding: 0.22rem 0.5rem;
+}
+
+.limit-chip--total {
+  background: rgba(16, 185, 129, 0.18);
+  color: #047857;
+}
+
+.limit-chip--daily {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+}
+
+.limit-chip--opus {
+  background: rgba(139, 92, 246, 0.18);
+  color: #6d28d9;
+}
+
+.limit-chip--window {
+  background: rgba(14, 165, 233, 0.18);
+  color: #0ea5e9;
+}
+
+.limit-chip--platform {
+  background: rgba(168, 85, 247, 0.18);
+  color: #7c3aed;
+}
+
+.limit-chip--model {
+  background: rgba(99, 102, 241, 0.18);
+  color: #4338ca;
+}
+
+.limit-chip--warning {
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.45);
+}
+
+.limit-chip--critical {
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.55);
+}
+
+.limit-detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.12);
+  transition: all 0.2s ease;
+}
+
+.limit-detail-toggle:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.limit-detail-toggle i {
+  font-size: 0.65rem;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+:deep(.limit-tooltip-popper) {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(17, 24, 39, 0.95);
+  padding: 0.75rem;
+  backdrop-filter: blur(8px);
+}
+
+:deep(.limit-tooltip-popper .el-popper__arrow::before) {
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+:deep(.limit-tooltip) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+  color: #f9fafb;
+}
+
+:deep(.limit-tooltip__title) {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e5e7eb;
+}
+
+:deep(.limit-tooltip__meta) {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #cbd5f5;
+  gap: 0.75rem;
+}
+
+:deep(.dark) .limit-chip {
+  color: #e5e7eb;
+}
+
+:deep(.dark) .limit-chip--total {
+  background: rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
+}
+
+:deep(.dark) .limit-chip--daily {
+  background: rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
+}
+
+:deep(.dark) .limit-chip--opus {
+  background: rgba(139, 92, 246, 0.3);
+  color: #ddd6fe;
+}
+
+:deep(.dark) .limit-chip--window {
+  background: rgba(14, 165, 233, 0.3);
+  color: #bae6fd;
+}
+
+:deep(.dark) .limit-chip--platform {
+  background: rgba(168, 85, 247, 0.3);
+  color: #d8b4fe;
+}
+
+:deep(.dark) .limit-chip--model {
+  background: rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+}
+
+:deep(.dark) .limit-detail-toggle {
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.25);
+}
+
+:deep(.dark) .limit-detail-toggle:hover {
+  background: rgba(37, 99, 235, 0.35);
 }
 </style>
