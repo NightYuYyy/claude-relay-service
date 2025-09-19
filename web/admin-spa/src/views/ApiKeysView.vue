@@ -238,12 +238,12 @@
           <!-- 桌面端表格视图 -->
           <div v-else class="table-wrapper hidden md:block">
             <div class="table-container">
-              <table class="w-full table-fixed">
+              <table class="w-full table-auto lg:table-fixed">
                 <thead
                   class="sticky top-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100/90 backdrop-blur-sm dark:from-gray-700 dark:to-gray-800/90"
                 >
                   <tr>
-                    <th v-if="shouldShowCheckboxes" class="w-[50px] px-3 py-4 text-left">
+                    <th v-if="shouldShowCheckboxes" class="w-12 px-3 py-4 text-left">
                       <div class="flex items-center">
                         <input
                           v-model="selectAllChecked"
@@ -255,7 +255,7 @@
                       </div>
                     </th>
                     <th
-                      class="w-[14%] min-w-[120px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[14%] min-w-[120px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       @click="sortApiKeys('name')"
                     >
                       名称
@@ -270,17 +270,17 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[15%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="w-[10%] min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       所属账号
                     </th>
                     <th
-                      class="w-[10%] min-w-[80px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="hidden w-[8%] min-w-[60px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 lg:table-cell"
                     >
                       标签
                     </th>
                     <th
-                      class="w-[6%] min-w-[60px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[8%] min-w-[60px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       @click="sortApiKeys('status')"
                     >
                       状态
@@ -295,7 +295,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[7%] min-w-[90px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="hidden w-[8%] min-w-[70px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 lg:table-cell"
                       @click="sortApiKeys('periodCost')"
                     >
                       费用
@@ -310,12 +310,12 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[14%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="w-[10%] min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       限制
                     </th>
                     <th
-                      class="w-[7%] min-w-[90px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[8%] min-w-[80px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       @click="sortApiKeys('periodTokens')"
                     >
                       Token
@@ -330,7 +330,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[5%] min-w-[45px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="hidden w-[8%] min-w-[60px] cursor-pointer px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 md:table-cell"
                       @click="sortApiKeys('periodRequests')"
                     >
                       请求数
@@ -345,7 +345,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[8%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="w-[8%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       @click="sortApiKeys('lastUsedAt')"
                     >
                       最后使用
@@ -360,7 +360,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[8%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="hidden w-[9%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 xl:table-cell"
                       @click="sortApiKeys('createdAt')"
                     >
                       创建时间
@@ -375,7 +375,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[8%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="hidden w-[9%] min-w-[70px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 xl:table-cell"
                       @click="sortApiKeys('expiresAt')"
                     >
                       过期时间
@@ -390,7 +390,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="w-[23%] min-w-[170px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="w-[28%] min-w-[220px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       操作
                     </th>
@@ -450,7 +450,7 @@
                             <span
                               class="inline-flex items-center rounded bg-indigo-100 px-1.5 py-0.5 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                             >
-                              <i class="fas fa-brain mr-1 text-[10px]" />
+                              <i class="fas fa-brain mr-1 text-[16px]" />
                               Claude
                             </span>
                             <span class="truncate text-gray-600 dark:text-gray-400">
@@ -462,7 +462,7 @@
                             <span
                               class="inline-flex items-center rounded bg-yellow-100 px-1.5 py-0.5 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                             >
-                              <i class="fas fa-robot mr-1 text-[10px]" />
+                              <i class="fas fa-robot mr-1 text-[16px]" />
                               Gemini
                             </span>
                             <span class="truncate text-gray-600 dark:text-gray-400">
@@ -474,7 +474,7 @@
                             <span
                               class="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                             >
-                              <i class="fa-openai mr-1 text-[10px]" />
+                              <i class="fa-openai mr-1 text-[16px]" />
                               OpenAI
                             </span>
                             <span class="truncate text-gray-600 dark:text-gray-400">
@@ -557,7 +557,7 @@
                         </span>
                       </td>
                       <!-- 限制 -->
-                      <td class="px-2 py-2 align-top" style="font-size: 12px">
+                      <td class="align-center px-3 py-3" style="font-size: 12px">
                         <div
                           v-if="getLimitChips(key).length > 0"
                           class="flex flex-wrap items-center gap-2"
@@ -619,7 +619,6 @@
                                       class="flex items-center justify-between gap-3"
                                     >
                                       <span class="flex items-center gap-1 text-xs text-gray-200">
-                                        <i :class="['text-[10px]', item.icon]" />
                                         {{ item.label }}
                                       </span>
                                       <div
@@ -779,19 +778,20 @@
                           </span>
                         </div>
                       </td>
-                      <td class="whitespace-nowrap px-3 py-3" style="font-size: 13px">
-                        <div class="flex gap-1">
+                      <td class="px-3 py-3" style="font-size: 13px">
+                        <!-- 大屏幕：显示所有按钮 -->
+                        <div class="hidden flex-wrap gap-1 md:flex">
                           <button
-                            class="rounded px-2 py-1 text-xs font-medium text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-900 dark:hover:bg-purple-900/20"
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-purple-600 transition-colors hover:bg-purple-50 hover:text-purple-900 dark:hover:bg-purple-900/20"
                             title="查看详细统计"
                             @click="showUsageDetails(key)"
                           >
                             <i class="fas fa-chart-line" />
-                            <span class="ml-1 hidden xl:inline">详情</span>
+                            <span class="ml-1 hidden lg:inline">详情</span>
                           </button>
                           <button
                             v-if="key && key.id"
-                            class="rounded px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-900/20"
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-900/20"
                             title="模型使用分布"
                             @click="toggleApiKeyModelStats(key.id)"
                           >
@@ -801,15 +801,15 @@
                                 expandedApiKeys[key.id] ? 'fa-chevron-up' : 'fa-chevron-down'
                               ]"
                             />
-                            <span class="ml-1 hidden xl:inline">模型</span>
+                            <span class="ml-1 hidden lg:inline">模型</span>
                           </button>
                           <button
-                            class="rounded px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-blue-900/20"
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-blue-900/20"
                             title="编辑"
                             @click="openEditApiKeyModal(key)"
                           >
                             <i class="fas fa-edit" />
-                            <span class="ml-1 hidden xl:inline">编辑</span>
+                            <span class="ml-1 hidden lg:inline">编辑</span>
                           </button>
                           <button
                             v-if="
@@ -817,35 +817,65 @@
                               (isApiKeyExpired(key.expiresAt) ||
                                 isApiKeyExpiringSoon(key.expiresAt))
                             "
-                            class="rounded px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-900 dark:hover:bg-green-900/20"
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-900 dark:hover:bg-green-900/20"
                             title="续期"
                             @click="openRenewApiKeyModal(key)"
                           >
                             <i class="fas fa-clock" />
-                            <span class="ml-1 hidden xl:inline">续期</span>
+                            <span class="ml-1 hidden lg:inline">续期</span>
                           </button>
                           <button
                             :class="[
                               key.isActive
                                 ? 'text-orange-600 hover:bg-orange-50 hover:text-orange-900 dark:hover:bg-orange-900/20'
                                 : 'text-green-600 hover:bg-green-50 hover:text-green-900 dark:hover:bg-green-900/20',
-                              'rounded px-2 py-1 text-xs font-medium transition-colors'
+                              'flex items-center rounded px-2 py-1 text-xs font-medium transition-colors'
                             ]"
                             :title="key.isActive ? '禁用' : '激活'"
                             @click="toggleApiKeyStatus(key)"
                           >
                             <i :class="['fas', key.isActive ? 'fa-ban' : 'fa-check-circle']" />
-                            <span class="ml-1 hidden xl:inline">{{
+                            <span class="ml-1 hidden lg:inline">{{
                               key.isActive ? '禁用' : '激活'
                             }}</span>
                           </button>
                           <button
-                            class="rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-900 dark:hover:bg-red-900/20"
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-900 dark:hover:bg-red-900/20"
                             title="删除"
                             @click="deleteApiKey(key.id)"
                           >
                             <i class="fas fa-trash" />
-                            <span class="ml-1 hidden xl:inline">删除</span>
+                            <span class="ml-1 hidden lg:inline">删除</span>
+                          </button>
+                        </div>
+
+                        <!-- 小屏幕：紧凑按钮 -->
+                        <div class="flex gap-1 md:hidden">
+                          <button
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-blue-900/20"
+                            title="编辑"
+                            @click="openEditApiKeyModal(key)"
+                          >
+                            <i class="fas fa-edit" />
+                          </button>
+                          <button
+                            :class="[
+                              key.isActive
+                                ? 'text-orange-600 hover:bg-orange-50 hover:text-orange-900 dark:hover:bg-orange-900/20'
+                                : 'text-green-600 hover:bg-green-50 hover:text-green-900 dark:hover:bg-green-900/20',
+                              'flex items-center rounded px-2 py-1 text-xs font-medium transition-colors'
+                            ]"
+                            :title="key.isActive ? '禁用' : '激活'"
+                            @click="toggleApiKeyStatus(key)"
+                          >
+                            <i :class="['fas', key.isActive ? 'fa-ban' : 'fa-check-circle']" />
+                          </button>
+                          <button
+                            class="flex items-center rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-900 dark:hover:bg-red-900/20"
+                            title="删除"
+                            @click="deleteApiKey(key.id)"
+                          >
+                            <i class="fas fa-trash" />
                           </button>
                         </div>
                       </td>
@@ -1618,37 +1648,37 @@
 
             <div class="table-wrapper">
               <div class="table-container">
-                <table class="w-full table-fixed">
+                <table class="w-full table-auto lg:table-fixed">
                   <thead class="bg-gray-50/80 backdrop-blur-sm dark:bg-gray-700/80">
                     <tr>
                       <th
-                        class="w-[14%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[18%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         名称
                       </th>
                       <th
-                        class="w-[15%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[15%] min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         所属账号
                       </th>
                       <th
                         v-if="isLdapEnabled"
-                        class="w-[15%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[12%] min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         创建者
                       </th>
                       <th
-                        class="w-[15%] min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[12%] min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         创建时间
                       </th>
                       <th
-                        class="w-[10%] min-w-[90px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[10%] min-w-[80px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         删除者
                       </th>
                       <th
-                        class="w-[10%] min-w-[90px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="w-[10%] min-w-[80px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         删除时间
                       </th>
@@ -4091,35 +4121,16 @@ onMounted(async () => {
 }
 
 .table-container {
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow: hidden;
   margin: 0;
   padding: 0;
   max-width: 100%;
 }
 
-/* 防止表格内容溢出 */
+/* 表格样式 */
 .table-container table {
-  min-width: 100%;
+  width: 100%;
   border-collapse: collapse;
-}
-
-.table-container::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-container::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 4px;
-}
-
-.table-container::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.table-container::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
 }
 
 .table-row {
